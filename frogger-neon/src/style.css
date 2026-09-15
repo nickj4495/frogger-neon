@@ -1,0 +1,105 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #020308;
+}
+
+body {
+    position: relative;
+    font-family: "Courier New", monospace;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
+    z-index: 0;
+}
+
+#game-hud {
+    position: fixed;
+    top: 24px;
+    left: 28px;
+
+    min-width: 260px;
+
+    padding: 14px 18px;
+
+    color: #70faff;
+
+    background: rgba(2, 8, 18, 0.78);
+
+    border: 1px solid rgba(50, 230, 255, 0.7);
+
+    box-shadow:
+        0 0 18px rgba(0, 220, 255, 0.2),
+        inset 0 0 18px rgba(0, 220, 255, 0.08);
+
+    pointer-events: none;
+    user-select: none;
+    z-index: 10;
+}
+
+.hud-title {
+    margin-bottom: 10px;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    letter-spacing: 4px;
+}
+
+.hud-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+#game-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        scale(0.7);
+
+    opacity: 0;
+
+    color: #ff2c91;
+
+    font-size: 64px;
+    font-weight: bold;
+
+    letter-spacing: 8px;
+
+    text-shadow:
+        0 0 10px #ff2c91,
+        0 0 30px #ff2c91;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+
+    pointer-events: none;
+    user-select: none;
+    z-index: 20;
+}
+
+#game-message.visible {
+    opacity: 1;
+
+    transform:
+        translate(-50%, -50%)
+        scale(1);
+}
