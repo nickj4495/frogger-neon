@@ -45,6 +45,9 @@ type TurtleState =
 interface TurtleGroup {
     entity: pc.Entity;
 
+    material:
+        pc.StandardMaterial;
+
     timer: number;
 
     state: TurtleState;
@@ -187,6 +190,8 @@ export class TurtleLane
             this.groups.push({
                 entity,
 
+                material,
+
                 timer:
                     i * 0.45,
 
@@ -317,6 +322,9 @@ export class TurtleLane
         let targetY =
             0.25;
 
+        let submergedAmount =
+            0;
+
         if (
             state === 'warning'
         ) {
@@ -355,16 +363,22 @@ export class TurtleLane
             targetY =
                 pc.math.lerp(
                     0.25,
-                    -0.35,
+                    -0.12,
                     progress
                 );
+
+            submergedAmount =
+                progress;
         }
 
         if (
             state === 'submerged'
         ) {
             targetY =
-                -0.35;
+                -0.12;
+
+            submergedAmount =
+                1;
         }
 
         if (
@@ -379,10 +393,13 @@ export class TurtleLane
 
             targetY =
                 pc.math.lerp(
-                    -0.35,
+                    -0.12,
                     0.25,
                     progress
                 );
+
+            submergedAmount =
+                1 - progress;
         }
 
         const position =
@@ -394,6 +411,104 @@ export class TurtleLane
             targetY,
             position.z
         );
+
+        this.updateUnderwaterVisual(
+            group,
+            submergedAmount
+        );
+    }
+
+    private updateUnderwaterVisual(
+        group: TurtleGroup,
+        submergedAmount: number
+    ): void {
+        const amount =
+            pc.math.clamp(
+                submergedAmount,
+                0,
+                1
+            );
+
+        /*
+         * Bright green above water.
+         */
+        const surfaceColor =
+            new pc.Color(
+                0.05,
+                0.65,
+                0.35
+            );
+
+        /*
+         * Darker / bluer underwater.
+         */
+        const underwaterColor =
+            new pc.Color(
+                0.02,
+                0.20,
+                0.18
+            );
+
+        group.material.diffuse.set(
+            pc.math.lerp(
+                surfaceColor.r,
+                underwaterColor.r,
+                amount
+            ),
+            pc.math.lerp(
+                surfaceColor.g,
+                underwaterColor.g,
+                amount
+            ),
+            pc.math.lerp(
+                surfaceColor.b,
+                underwaterColor.b,
+                amount
+            )
+        );
+
+        /*
+         * Reduce the glow as the turtles
+         * move underneath the water.
+         */
+        group.material.emissive.set(
+            pc.math.lerp(
+                0.02,
+                0.005,
+                amount
+            ),
+            pc.math.lerp(
+                0.18,
+                0.04,
+                amount
+            ),
+            pc.math.lerp(
+                0.08,
+                0.04,
+                amount
+            )
+        );
+
+        /*
+         * Keep them visible, but ghosted
+         * beneath the water surface.
+         */
+        group.material.opacity =
+            pc.math.lerp(
+                1,
+                0.38,
+                amount
+            );
+
+        group.material.blendType =
+            amount > 0.01
+                ? pc.BLEND_NORMAL
+                : pc.BLEND_NONE;
+
+        group.material.depthWrite =
+            amount < 0.99;
+
+        group.material.update();
     }
 
     public isPlatformSafe(
@@ -434,7 +549,9 @@ export class TurtleLane
             group.state ===
                 'surfaced' ||
             group.state ===
-                'warning'
+                'warning' ||
+            group.state ===
+                'rising'
         );
     }
 

@@ -30,6 +30,9 @@ export class Player {
 
     private completedMove: PlayerMove | null = null;
 
+    private bufferedMove:
+        PlayerMove | null = null;
+
     constructor(
         private app: pc.Application,
         public entity: pc.Entity,
@@ -55,12 +58,38 @@ export class Player {
     }
 
     update(dt: number): void {
+        this.handleInput();
+
         if (this.isMoving) {
-            this.animateMovement(dt);
+            this.animateMovement(
+                dt
+            );
+
             return;
         }
 
-        this.handleInput();
+        /*
+         * Don't begin the buffered move until
+         * Game.ts has consumed and resolved
+         * the hop that just completed.
+         */
+        if (this.completedMove) {
+            return;
+        }
+
+        if (this.bufferedMove) {
+            const move = {
+                ...this.bufferedMove,
+            };
+
+            this.bufferedMove =
+                null;
+
+            this.startMove(
+                move.x,
+                move.z
+            );
+        }
     }
 
     private handleInput(): void {
@@ -111,9 +140,33 @@ export class Player {
             x = CELL_SIZE;
         }
 
-        if (x !== 0 || z !== 0) {
-            this.startMove(x, z);
+        if (
+            x === 0 &&
+            z === 0
+        ) {
+            return;
         }
+
+        if (this.isMoving) {
+            /*
+             * Frogger is still finishing the
+             * current hop.
+             *
+             * Remember one upcoming move so
+             * slightly-early input isn't lost.
+             */
+            this.bufferedMove = {
+                x,
+                z,
+            };
+
+            return;
+        }
+
+        this.startMove(
+            x,
+            z
+        );
     }
 
     private startMove(
@@ -290,6 +343,7 @@ export class Player {
         this.platformVelocityX = 0;
 
         this.completedMove = null;
+        this.bufferedMove = null;
 
         this.currentMove = {
             x: 0,

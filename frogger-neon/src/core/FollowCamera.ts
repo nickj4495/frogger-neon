@@ -244,22 +244,19 @@ export class FollowCamera {
             );
     }
 
-    public startGoalCelebration():
+        public startGoalCelebration():
         void {
-        const playerPosition =
-            this.target.getPosition();
-
         /*
-         * Lock our normal tracked position
-         * at the point the celebration
-         * begins.
+         * Do NOT reset trackedX/trackedZ.
+         *
+         * They represent the exact normal
+         * gameplay framing we're currently
+         * transitioning FROM.
+         *
+         * Celebration mode will smoothly
+         * blend from that framing toward
+         * Frogger.
          */
-        this.trackedX =
-            playerPosition.x;
-
-        this.trackedZ =
-            playerPosition.z;
-
         this.celebrationActive =
             true;
 
