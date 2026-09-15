@@ -71,10 +71,25 @@ export class Player {
         this.moveStart.copy(this.entity.getPosition());
         this.moveTarget.copy(this.moveStart);
 
-        this.moveTarget.x += x;
-        this.moveTarget.z += z;
+        // Forward/backward movement keeps the frog's current X.
+        // This is important when riding a moving log.
+        if (z !== 0) {
+            this.moveTarget.z += z;
+        }
 
-        // Keep player inside the board horizontally.
+        // Left/right movement snaps back onto our 1-unit grid.
+        if (x !== 0) {
+            const currentGridX = Math.round(this.moveStart.x);
+
+            this.moveTarget.x =
+                currentGridX + x;
+        }
+
+        // Always snap Z to the integer lane grid.
+        this.moveTarget.z = Math.round(
+            this.moveTarget.z
+        );
+
         this.moveTarget.x = pc.math.clamp(
             this.moveTarget.x,
             -7,

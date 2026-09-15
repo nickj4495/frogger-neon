@@ -227,7 +227,8 @@ const riverLanes = [
 
 const game = new Game(
     frog,
-    trafficLanes
+    trafficLanes,
+    riverLanes
 );
 
 // --------------------------------------------------
@@ -278,7 +279,7 @@ app.on('update', (dt: number) => {
         lane.update(dt);
     }
 
-    game.update();
+    game.update(dt);
 });
 
 // --------------------------------------------------
