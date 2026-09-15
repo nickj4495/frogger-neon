@@ -1,6 +1,10 @@
 import * as pc from 'playcanvas';
 import './style.css';
 
+import { FollowCamera } from './core/FollowCamera';
+import { Settings } from './core/Settings';
+import { SettingsMenu } from './ui/SettingsMenu';
+
 import { Player } from './Player';
 import { TrafficLane } from './TrafficLane';
 import { RiverLane } from './RiverLane';
@@ -35,6 +39,8 @@ window.addEventListener('resize', () => {
 
 // Dark nighttime background
 app.scene.exposure = 1.2;
+
+Settings.load();
 
 // --------------------------------------------------
 // HELPERS
@@ -277,22 +283,51 @@ camera.lookAt(0, 0, -3);
 
 app.root.addChild(camera);
 
+const followCamera =
+    new FollowCamera(
+        camera,
+        frog.entity
+    );
+
+const settingsMenu =
+    new SettingsMenu(
+        () => {
+            game.pause();
+        },
+        () => {
+            game.resume();
+        }
+    );
+
+window.addEventListener(
+    'keydown',
+    (event) => {
+        if (event.code === 'Escape') {
+            settingsMenu.toggle();
+        }
+    }
+);
+
 // --------------------------------------------------
 // PLAYER MOVEMENT
 // --------------------------------------------------
 
 app.on('update', (dt: number) => {
-    frog.update(dt);
+    if (game.isPlaying()) {
+        frog.update(dt);
 
-    for (const lane of trafficLanes) {
-        lane.update(dt);
+        for (const lane of trafficLanes) {
+            lane.update(dt);
+        }
+
+        for (const lane of riverLanes) {
+            lane.update(dt);
+        }
+
+        game.update();
     }
 
-    for (const lane of riverLanes) {
-        lane.update(dt);
-    }
-
-    game.update();
+    followCamera.update(dt);
 });
 
 // --------------------------------------------------

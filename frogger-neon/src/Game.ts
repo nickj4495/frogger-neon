@@ -1,8 +1,9 @@
 import * as pc from 'playcanvas';
 
+import type { GameState } from './core/GameState';
+
 import { Player } from './Player';
 import type { PlayerMove } from './Player';
-
 import { TrafficLane } from './TrafficLane';
 import { RiverLane } from './RiverLane';
 
@@ -12,7 +13,7 @@ export class Game {
 
     private furthestZ = 5;
 
-    private isDead = false;
+    private state: GameState = 'playing';
 
     // --------------------------------------------------
     // RIVER STATE
@@ -51,7 +52,9 @@ export class Game {
     }
 
     update(): void {
-        if (this.isDead) return;
+        if (this.state !== 'playing') {
+            return;
+        }
 
         const completedMove =
             this.player.consumeCompletedMove();
@@ -64,11 +67,15 @@ export class Game {
 
         this.checkVehicleCollisions();
 
-        if (this.isDead) return;
+        if (this.state !== 'playing') {
+            return;
+        }
 
         this.checkRiver();
 
-        if (this.isDead) return;
+        if (this.state !== 'playing') {
+            return;
+        }
 
         this.checkForwardProgress();
         this.checkGoal();
@@ -347,9 +354,11 @@ export class Game {
     }
 
     private reachGoal(): void {
-        if (this.isDead) return;
+        if (this.state !== 'playing') {
+            return;
+        }
 
-        this.isDead = true;
+        this.state = 'levelComplete';
 
         this.clearRidingLog();
 
@@ -366,7 +375,7 @@ export class Game {
 
             this.hideMessage();
 
-            this.isDead = false;
+            this.state = 'playing';
         }, 650);
     }
 
@@ -426,9 +435,11 @@ export class Game {
     private killPlayer(
         message = 'SPLAT!'
     ): void {
-        if (this.isDead) return;
+        if (this.state !== 'playing') {
+            return;
+        }
 
-        this.isDead = true;
+        this.state = 'dead';
 
         this.clearRidingLog();
 
@@ -457,11 +468,14 @@ export class Game {
 
             this.hideMessage();
 
-            this.isDead = false;
+            this.state = 'playing';
         }, 900);
     }
 
     private gameOver(): void {
+
+        this.state = 'gameOver';
+
         this.showMessage(
             'GAME OVER'
         );
@@ -482,8 +496,40 @@ export class Game {
 
             this.hideMessage();
 
-            this.isDead = false;
+            this.state = 'playing';
         }, 1800);
+    }
+
+    public pause(): void {
+        if (this.state === 'playing') {
+            this.state = 'paused';
+        }
+    }
+
+    public resume(): void {
+        if (this.state === 'paused') {
+            this.state = 'playing';
+        }
+    }
+
+    public togglePause(): void {
+        if (this.state === 'playing') {
+            this.pause();
+        } else if (this.state === 'paused') {
+            this.resume();
+        }
+    }
+
+    public isPlaying(): boolean {
+        return this.state === 'playing';
+    }
+
+    public isPaused(): boolean {
+        return this.state === 'paused';
+    }
+
+    public getState(): GameState {
+        return this.state;
     }
 
     // --------------------------------------------------
