@@ -1,5 +1,8 @@
 export const CELL_SIZE = 1;
 
+export const LANDING_SNAP_DISTANCE =
+    CELL_SIZE * 0.6;
+
 export const GRID_MIN_X = -9;
 export const GRID_MAX_X = 9;
 
@@ -12,6 +15,14 @@ export function snapToGrid(
     return (
         Math.round(value / CELL_SIZE) *
         CELL_SIZE
+    );
+}
+
+export function getNearestGridX(
+    x: number
+): number {
+    return clampToGrid(
+        snapToGrid(x)
     );
 }
 

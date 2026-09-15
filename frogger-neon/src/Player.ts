@@ -319,4 +319,26 @@ export class Player {
         boolean {
         return this.isMoving;
     }
+
+    public snapToPosition(
+        x: number,
+        z: number
+    ): void {
+        const position =
+            this.entity.getPosition();
+
+        this.entity.setPosition(
+            x,
+            position.y,
+            z
+        );
+
+        this.moveStart.copy(
+            this.entity.getPosition()
+        );
+
+        this.moveTarget.copy(
+            this.entity.getPosition()
+        );
+    }
 }

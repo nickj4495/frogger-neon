@@ -42,6 +42,26 @@ export interface RiverLaneDefinition {
     logSize: number;
 }
 
+export interface TurtleLaneDefinition {
+    z: number;
+
+    speed: number;
+
+    direction: 1 | -1;
+
+    groupCount: number;
+
+    spacing: number;
+
+    groupSize: number;
+
+    canSubmerge: boolean;
+
+    surfaceDuration?: number;
+
+    submergedDuration?: number;
+}
+
 export interface GoalDefinition {
     x: number;
     z: number;
@@ -63,6 +83,8 @@ export interface LevelDefinition {
     traffic: TrafficLaneDefinition[];
 
     river: RiverLaneDefinition[];
+
+    turtles: TurtleLaneDefinition[];
 
     goals: GoalDefinition[];
 }

@@ -158,41 +158,50 @@ export const Level01: LevelDefinition = {
         },
     ],
 
-    river: [
+        river: [
         {
             z: -1,
-
             speed: 2,
             direction: 1,
 
             logCount: 4,
             spacing: 7,
-
             logSize: 3,
         },
 
+        {
+            z: -3,
+            speed: 2.5,
+            direction: 1,
+
+            logCount: 3,
+            spacing: 8,
+            logSize: 4,
+        },
+
+        {
+            z: -5,
+            speed: 4,
+            direction: 1,
+
+            logCount: 4,
+            spacing: 6,
+            logSize: 2,
+        },
+    ],
+
+        turtles: [
         {
             z: -2,
 
             speed: 3,
             direction: -1,
 
-            logCount: 4,
+            groupCount: 4,
             spacing: 6,
+            groupSize: 3,
 
-            logSize: 2,
-        },
-
-        {
-            z: -3,
-
-            speed: 2.5,
-            direction: 1,
-
-            logCount: 3,
-            spacing: 8,
-
-            logSize: 4,
+            canSubmerge: false,
         },
 
         {
@@ -201,22 +210,14 @@ export const Level01: LevelDefinition = {
             speed: 3.5,
             direction: -1,
 
-            logCount: 4,
+            groupCount: 4,
             spacing: 7,
+            groupSize: 3,
 
-            logSize: 3,
-        },
+            canSubmerge: true,
 
-        {
-            z: -5,
-
-            speed: 4,
-            direction: 1,
-
-            logCount: 4,
-            spacing: 6,
-
-            logSize: 2,
+            surfaceDuration: 3.5,
+            submergedDuration: 1.25,
         },
     ],
 

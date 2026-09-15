@@ -4,6 +4,10 @@ import {
     CELL_SIZE,
 } from './core/Grid';
 
+import type {
+    MovingPlatformLane,
+} from './river/MovingPlatformLane';
+
 import {
     MOVING_OBJECT_MIN_X,
     MOVING_OBJECT_MAX_X,
@@ -21,8 +25,14 @@ export interface RiverLaneOptions {
     logSize: number;
 }
 
-export class RiverLane {
+export class RiverLane
+    implements MovingPlatformLane {
     public logs: pc.Entity[] = [];
+
+    public get platforms():
+        pc.Entity[] {
+        return this.logs;
+    }
 
     public readonly speed: number;
     public readonly direction: 1 | -1;
@@ -141,9 +151,13 @@ export class RiverLane {
         const logX =
             log.getPosition().x;
 
+        const logWidth =
+            this.logSize *
+            CELL_SIZE;
+
         const leftEdge =
             logX -
-            this.logSize / 2;
+            logWidth / 2;
 
         return (
             leftEdge +
@@ -163,22 +177,29 @@ export class RiverLane {
         const logX =
             log.getPosition().x;
 
+        const logWidth =
+            this.logSize *
+            CELL_SIZE;
+
         const leftEdge =
             logX -
-            this.logSize / 2;
+            logWidth / 2;
 
         const localX =
             frogX - leftEdge;
 
         if (
             localX < 0 ||
-            localX >= this.logSize
+            localX >= logWidth
         ) {
             return null;
         }
 
         const slotIndex =
-            Math.floor(localX);
+            Math.floor(
+                localX /
+                CELL_SIZE
+            );
 
         if (
             slotIndex < 0 ||
@@ -199,5 +220,17 @@ export class RiverLane {
             slotIndex <
                 this.logSize
         );
+    }
+
+    public isPlatformSafe(
+        _platform: pc.Entity
+    ): boolean {
+        return true;
+    }
+
+    public canLandOnPlatform(
+        _platform: pc.Entity
+    ): boolean {
+        return true;
     }
 }

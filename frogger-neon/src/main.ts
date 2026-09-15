@@ -3,7 +3,14 @@ import './style.css';
 
 import { FollowCamera } from './core/FollowCamera';
 import { Settings } from './core/Settings';
+import {
+    Debug,
+} from './core/Debug';
+
 import { SettingsMenu } from './ui/SettingsMenu';
+import {
+    FrogCollectionHUD,
+} from './ui/FrogCollectionHUD';
 
 import { LevelManager } from './levels/LevelManager';
 import { Level01 } from './levels/Level01';
@@ -95,6 +102,11 @@ const levelManager =
 const level =
     levelManager.load(Level01);
 
+const frogCollectionHUD =
+    new FrogCollectionHUD(
+        level.getGoalColors()
+    );
+
 // --------------------------------------------------
 // PLAYER
 // --------------------------------------------------
@@ -119,11 +131,23 @@ const frog = new Player(
     startPosition
 );
 
+const movingPlatformLanes = [
+    ...level.riverLanes,
+    ...level.turtleLanes,
+];
+
 const game = new Game(
     frog,
     level,
     level.trafficLanes,
-    level.riverLanes
+    movingPlatformLanes,
+    (
+        collected
+    ) => {
+        frogCollectionHUD.update(
+            collected
+        );
+    }
 );
 
 // --------------------------------------------------
@@ -192,17 +216,47 @@ window.addEventListener(
 // PLAYER MOVEMENT
 // --------------------------------------------------
 
-app.on('update', (dt: number) => {
-    if (game.isPlaying()) {
-        frog.update(dt);
+const testModeIndicator =
+    document.createElement(
+        'div'
+    );
 
-        levelManager.update(dt);
+testModeIndicator.id =
+    'test-mode-indicator';
 
-        game.update();
+testModeIndicator.textContent =
+    'TEST MODE';
+
+document.body.appendChild(
+    testModeIndicator
+);
+
+app.on(
+    'update',
+    (dt: number) => {
+        if (
+            app.keyboard?.wasPressed(
+                pc.KEY_T
+            )
+        ) {
+            const testMode =
+                Debug.toggleTestMode();
+
+            testModeIndicator.style.display =
+                testMode
+                    ? 'block'
+                    : 'none';
+        }
+
+        if (game.isPlaying()) {
+            frog.update(dt);
+            levelManager.update(dt);
+            game.update();
+        }
+
+        followCamera.update(dt);
     }
-
-    followCamera.update(dt);
-});
+);
 
 // --------------------------------------------------
 // START

@@ -1,8 +1,25 @@
 import * as pc from 'playcanvas';
 
 import type { GameState } from './core/GameState';
+import {
+    CELL_SIZE,
+    GRID_MIN_X,
+    GRID_MAX_X,
+    isInsideGrid
+} from './core/Grid';
+import {
+    Debug,
+} from './core/Debug';
+
+import type {
+    MovingPlatformLane,
+} from './river/MovingPlatformLane';
 
 import { Level } from './levels/Level';
+
+import type {
+    GoalState,
+} from './levels/Level';
 
 import { Player } from './Player';
 import type { PlayerMove } from './Player';
@@ -21,11 +38,12 @@ export class Game {
     // RIVER STATE
     // --------------------------------------------------
 
-    private ridingLog:
+    private ridingPlatform:
         pc.Entity | null = null;
 
     private ridingLane:
-        RiverLane | null = null;
+        MovingPlatformLane | null =
+            null;
 
     private ridingSlot:
         number | null = null;
@@ -43,7 +61,13 @@ export class Game {
         private trafficLanes:
             TrafficLane[],
         private riverLanes:
-            RiverLane[]
+            MovingPlatformLane[],
+
+        private onGoalsChanged?:
+            (
+                collected:
+                    boolean[]
+            ) => void
     ) {
         this.hud =
             this.createHUD();
@@ -92,7 +116,7 @@ export class Game {
         move: PlayerMove
     ): void {
         if (
-            !this.ridingLog ||
+            !this.ridingPlatform ||
             !this.ridingLane ||
             this.ridingSlot === null
         ) {
@@ -124,7 +148,7 @@ export class Game {
             // of the log.
             //
             // He's no longer attached to it.
-            this.clearRidingLog();
+            this.clearRidingPlatform();
 
             return;
         }
@@ -139,7 +163,7 @@ export class Game {
             // checkRiver() will determine
             // whether we landed on another
             // log or directly in the water.
-            this.clearRidingLog();
+            this.clearRidingPlatform();
         }
     }
 
@@ -162,14 +186,14 @@ export class Game {
                 !this.player
                     .isCurrentlyMoving()
             ) {
-                this.clearRidingLog();
+                this.clearRidingPlatform();
             }
 
             return;
         }
 
-        // Don't perform landing checks
-        // in the middle of a hop.
+        // Don't resolve landings
+        // during a hop.
         if (
             this.player
                 .isCurrentlyMoving()
@@ -178,18 +202,38 @@ export class Game {
         }
 
         // ----------------------------------------------
-        // ALREADY RIDING A KNOWN SLOT
+        // ALREADY RIDING A KNOWN PLATFORM SLOT
         // ----------------------------------------------
 
         if (
-            this.ridingLog &&
+            this.ridingPlatform &&
             this.ridingLane &&
             this.ridingSlot !== null
         ) {
+            // A platform can become unsafe
+            // while Frogger is riding it.
+            //
+            // Logs always return true.
+            // Diving turtles will not.
+            if (
+                !this.ridingLane
+                    .isPlatformSafe(
+                        this.ridingPlatform
+                    )
+            ) {
+                this.clearRidingPlatform();
+
+                this.killPlayer(
+                    'SPLASH!'
+                );
+
+                return;
+            }
+
             const slotX =
                 this.ridingLane
                     .getSlotX(
-                        this.ridingLog,
+                        this.ridingPlatform,
                         this.ridingSlot
                     );
 
@@ -208,8 +252,9 @@ export class Game {
                 );
 
             if (
-                slotX < -7.5 ||
-                slotX > 7.5
+                !isInsideGrid(
+                    slotX
+                )
             ) {
                 this.killPlayer(
                     'SPLASH!'
@@ -237,12 +282,20 @@ export class Game {
             }
 
             for (
-                const log
-                of lane.logs
+                const platform
+                of lane.platforms
             ) {
+                if (
+                    !lane.canLandOnPlatform(
+                        platform
+                    )
+                ) {
+                    continue;
+                }
+
                 const slot =
                     lane.getClosestSlot(
-                        log,
+                        platform,
                         frogPosition.x
                     );
 
@@ -250,8 +303,8 @@ export class Game {
                     continue;
                 }
 
-                this.ridingLog =
-                    log;
+                this.ridingPlatform =
+                    platform;
 
                 this.ridingLane =
                     lane;
@@ -267,12 +320,12 @@ export class Game {
 
                 const slotX =
                     lane.getSlotX(
-                        log,
+                        platform,
                         slot
                     );
 
-                // Snap precisely to the
-                // center of the slot.
+                // Resolve landing to the
+                // exact logical slot center.
                 this.player.entity
                     .setPosition(
                         slotX,
@@ -283,8 +336,8 @@ export class Game {
                 return;
             }
 
-            // We're in a river lane,
-            // but no platform contains us.
+            // Frog landed in water with
+            // no safe platform underneath.
             this.killPlayer(
                 'SPLASH!'
             );
@@ -293,10 +346,10 @@ export class Game {
         }
     }
 
-    private clearRidingLog():
+    private clearRidingPlatform():
         void {
-        this.ridingLog = null;
-        this.ridingLane = null;
+        this.ridingPlatform = null;
+        this.ridingPlatform = null;
         this.ridingSlot = null;
 
         this.player
@@ -341,8 +394,7 @@ export class Game {
 
     private checkGoal(): void {
         if (
-            this.player
-                .isCurrentlyMoving()
+            this.player.isCurrentlyMoving()
         ) {
             return;
         }
@@ -351,38 +403,101 @@ export class Game {
             this.player.getPosition();
 
         if (
-            this.level.isGoalAt(
+            !this.level.isGoalAt(
                 frogPosition.z
             )
         ) {
-            this.reachGoal();
-        }
-    }
-
-    private reachGoal(): void {
-        if (this.state !== 'playing') {
             return;
         }
 
-        this.state = 'levelComplete';
+        const goal =
+            this.level.getGoalAt(
+                frogPosition.x,
+                frogPosition.z
+            );
 
-        this.clearRidingLog();
+        // Reached the goal row but
+        // missed every valid goal.
+        if (!goal) {
+            this.killPlayer();
+            return;
+        }
 
-        this.score += 100;
+        // This goal has already
+        // been collected.
+        if (goal.collected) {
+            this.killPlayer();
+            return;
+        }
+
+        // Resolve the landing to the exact
+        // logical center of the goal.
+        this.player.snapToPosition(
+            goal.x,
+            goal.z
+        );
+
+        this.collectGoal(goal);
+    }
+
+    private completeLevel(): void {
+        this.state =
+            'levelComplete';
+
+        this.clearRidingPlatform();
+
+        this.score += 500;
 
         this.updateHUD();
 
-        this.showMessage('+100');
+        console.log(
+            'LEVEL COMPLETE!'
+        );
+    }
 
-        window.setTimeout(() => {
-            this.furthestZ =
-                this.level.definition.startZ;
+    private collectGoal(
+        goal: GoalState
+    ): void {
+        if (
+            !this.level.collectGoal(
+                goal
+            )
+        ) {
+            return;
+        }
 
+        this.score += 100;
+
+        this.onGoalsChanged?.(
+            this.level
+                .getGoalCollectionState()
+        );
+
+        this.updateHUD();
+
+        if (
+            this.level
+                .areAllGoalsCollected()
+        ) {
+            this.completeLevel();
+            return;
+        }
+
+        this.state =
+            'levelComplete';
+
+        this.clearRidingPlatform();
+
+        setTimeout(() => {
             this.player.reset();
 
-            this.hideMessage();
+            this.furthestZ =
+                this.level
+                    .definition
+                    .startZ;
 
-            this.state = 'playing';
+            this.state =
+                'playing';
         }, 650);
     }
 
@@ -442,13 +557,20 @@ export class Game {
     private killPlayer(
         message = 'SPLAT!'
     ): void {
+
+        if (
+            Debug.isTestMode()
+        ) {
+            return;
+        }
+
         if (this.state !== 'playing') {
             return;
         }
 
         this.state = 'dead';
 
-        this.clearRidingLog();
+        this.clearRidingPlatform();
 
         this.lives--;
 
@@ -494,7 +616,7 @@ export class Game {
             this.furthestZ =
                 this.level.definition.startZ;
 
-            this.clearRidingLog();
+            this.clearRidingPlatform();
 
             this.player.reset();
 

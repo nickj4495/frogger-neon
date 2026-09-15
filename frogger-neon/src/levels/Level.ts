@@ -2,10 +2,14 @@ import * as pc from 'playcanvas';
 
 import { TrafficLane } from '../TrafficLane';
 import { RiverLane } from '../RiverLane';
+import {
+    TurtleLane,
+} from '../TurtleLane';
 
 import {
     CELL_SIZE,
     GRID_WIDTH,
+    LANDING_SNAP_DISTANCE,
 } from '../core/Grid';
 
 import type {
@@ -13,12 +17,27 @@ import type {
     GroundType,
 } from './LevelDefinition';
 
+interface GoalState {
+    x: number;
+    z: number;
+
+    collected: boolean;
+
+    entity: pc.Entity;
+}
+
 export class Level {
+
+    private goals: GoalState[] = [];
+
     public trafficLanes:
         TrafficLane[] = [];
 
     public riverLanes:
         RiverLane[] = [];
+
+    public turtleLanes:
+        TurtleLane[] = [];
 
     private entities:
         pc.Entity[] = [];
@@ -35,6 +54,7 @@ export class Level {
         this.buildGround();
         this.buildTraffic();
         this.buildRiver();
+        this.buildTurtles();
         this.buildGoals();
     }
 
@@ -108,6 +128,23 @@ export class Level {
 
             this.entities.push(
                 entity
+            );
+        }
+    }
+
+        private buildTurtles(): void {
+        for (
+            const definition
+            of this.definition.turtles
+        ) {
+            const lane =
+                new TurtleLane(
+                    this.app,
+                    definition
+                );
+
+            this.turtleLanes.push(
+                lane
             );
         }
     }
@@ -199,6 +236,13 @@ export class Level {
         for (
             const lane
             of this.riverLanes
+        ) {
+            lane.update(dt);
+        }
+
+        for (
+            const lane
+            of this.turtleLanes
         ) {
             lane.update(dt);
         }
@@ -305,7 +349,7 @@ export class Level {
         return this.definition.goalZ;
     }
 
-    private buildGoals(): void {
+        private buildGoals(): void {
         for (
             const goal
             of this.definition.goals
@@ -360,6 +404,140 @@ export class Level {
             this.entities.push(
                 entity
             );
+
+            this.goals.push({
+                x: goal.x,
+                z: goal.z,
+
+                collected: false,
+
+                entity,
+            });
         }
+    }
+
+    public getGoalAt(
+        x: number,
+        z: number
+    ): GoalState | null {
+        const row =
+            Math.round(
+                z / CELL_SIZE
+            );
+
+        let closestGoal:
+            GoalState | null = null;
+
+        let closestDistance =
+            Infinity;
+
+        for (const goal of this.goals) {
+            const goalRow =
+                Math.round(
+                    goal.z /
+                    CELL_SIZE
+                );
+
+            if (goalRow !== row) {
+                continue;
+            }
+
+            const distance =
+                Math.abs(
+                    x - goal.x
+                );
+
+            if (
+                distance <=
+                    LANDING_SNAP_DISTANCE &&
+                distance <
+                    closestDistance
+            ) {
+                closestGoal = goal;
+
+                closestDistance =
+                    distance;
+            }
+        }
+
+        return closestGoal;
+    }
+
+    public collectGoal(
+        goal: GoalState
+    ): boolean {
+        if (goal.collected) {
+            return false;
+        }
+
+        goal.collected = true;
+
+        goal.entity.enabled = false;
+
+        return true;
+    }
+
+    public getCollectedGoalCount():
+        number {
+        return this.goals.filter(
+            goal => goal.collected
+        ).length;
+    }
+
+    public getGoalCount(): number {
+        return this.goals.length;
+    }
+
+    public areAllGoalsCollected():
+        boolean {
+        return (
+            this.getCollectedGoalCount() ===
+            this.getGoalCount()
+        );
+    }
+
+    public getGoalColors():
+        string[] {
+        return this.definition.goals.map(
+            goal => {
+                const r =
+                    Math.round(
+                        goal.color.r *
+                        255
+                    );
+
+                const g =
+                    Math.round(
+                        goal.color.g *
+                        255
+                    );
+
+                const b =
+                    Math.round(
+                        goal.color.b *
+                        255
+                    );
+
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+        );
+    }
+
+    public isGoalCollected(
+        index: number
+    ): boolean {
+        return (
+            this.goals[index]
+                ?.collected ??
+            false
+        );
+    }
+
+    public getGoalCollectionState():
+        boolean[] {
+        return this.goals.map(
+            goal =>
+                goal.collected
+        );
     }
 }

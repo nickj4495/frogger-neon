@@ -339,3 +339,121 @@ canvas {
 #settings-x:hover {
     color: #ff00aa;
 }
+
+/* ==========================================
+   COLLECTED FROGS
+   ========================================== */
+
+#frog-collection-hud {
+    position: fixed;
+
+    left: 24px;
+    bottom: 24px;
+
+    z-index: 1000;
+
+    display: flex;
+    align-items: flex-end;
+
+    gap: 10px;
+
+    pointer-events: none;
+}
+
+.frog-collection-icon {
+    width: 22px;
+    height: 18px;
+
+    position: relative;
+
+    border-radius:
+        50% 50% 42% 42%;
+
+    border: 1px solid
+        rgba(255, 255, 255, 0.15);
+
+    background:
+        rgba(255, 255, 255, 0.04);
+
+    opacity: 0.2;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Eyes / frog bumps */
+
+.frog-collection-icon::before,
+.frog-collection-icon::after {
+    content: '';
+
+    position: absolute;
+
+    top: -5px;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: inherit;
+}
+
+.frog-collection-icon::before {
+    left: 1px;
+}
+
+.frog-collection-icon::after {
+    right: 1px;
+}
+
+.frog-collection-icon.collected {
+    opacity: 1;
+
+    background:
+        var(--frog-color);
+
+    border-color:
+        var(--frog-color);
+
+    box-shadow:
+        0 0 12px
+        var(--frog-color);
+
+    transform:
+        translateY(-3px);
+}
+
+#test-mode-indicator {
+    position: fixed;
+
+    right: 24px;
+    bottom: 24px;
+
+    z-index: 1000;
+
+    padding: 8px 12px;
+
+    border: 1px solid
+        rgba(0, 255, 170, 0.6);
+
+    border-radius: 6px;
+
+    background:
+        rgba(0, 0, 0, 0.7);
+
+    color: #00ffaa;
+
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    pointer-events: none;
+
+    display: none;
+}
