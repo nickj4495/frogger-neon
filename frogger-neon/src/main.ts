@@ -169,30 +169,43 @@ const trafficLanes = [
         z: 2,
         speed: 3,
         direction: 1,
+
         vehicleCount: 3,
         spacing: 6,
+
+        vehicleSize: 2,
+
         color: neonPink,
-        vehicleLength: 1.8,
     }),
 
     new TrafficLane(app, {
         z: 0,
         speed: 4.5,
         direction: -1,
+
         vehicleCount: 3,
         spacing: 7,
+
+        vehicleSize: 3,
+
         color: neonBlue,
-        vehicleLength: 2.4,
     }),
 
     new TrafficLane(app, {
         z: -2,
         speed: 5.5,
         direction: 1,
+
         vehicleCount: 4,
         spacing: 5,
-        color: new pc.Color(1, 0.25, 0.05),
-        vehicleLength: 1.5,
+
+        vehicleSize: 2,
+
+        color: new pc.Color(
+            1,
+            0.25,
+            0.05
+        ),
     }),
 ];
 
@@ -203,7 +216,7 @@ const riverLanes = [
         direction: 1,
         logCount: 3,
         spacing: 7,
-        logLength: 3.5,
+        logSize: 3,
     }),
 
     new RiverLane(app, {
@@ -212,7 +225,7 @@ const riverLanes = [
         direction: -1,
         logCount: 3,
         spacing: 7,
-        logLength: 3,
+        logSize: 2,
     }),
 
     new RiverLane(app, {
@@ -221,7 +234,7 @@ const riverLanes = [
         direction: 1,
         logCount: 3,
         spacing: 7,
-        logLength: 4,
+        logSize: 3,
     }),
 ];
 
@@ -279,7 +292,7 @@ app.on('update', (dt: number) => {
         lane.update(dt);
     }
 
-    game.update(dt);
+    game.update();
 });
 
 // --------------------------------------------------

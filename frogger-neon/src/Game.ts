@@ -1,108 +1,322 @@
+import * as pc from 'playcanvas';
+
 import { Player } from './Player';
+import type { PlayerMove } from './Player';
+
 import { TrafficLane } from './TrafficLane';
 import { RiverLane } from './RiverLane';
 
 export class Game {
     private lives = 3;
     private score = 0;
+
     private furthestZ = 5;
 
     private isDead = false;
+
+    // --------------------------------------------------
+    // RIVER STATE
+    // --------------------------------------------------
+
+    private ridingLog:
+        pc.Entity | null = null;
+
+    private ridingLane:
+        RiverLane | null = null;
+
+    private ridingSlot:
+        number | null = null;
+
+    // --------------------------------------------------
+    // HUD
+    // --------------------------------------------------
 
     private hud: HTMLDivElement;
     private message: HTMLDivElement;
 
     constructor(
         private player: Player,
-        private trafficLanes: TrafficLane[],
-        private riverLanes: RiverLane[]
+        private trafficLanes:
+            TrafficLane[],
+        private riverLanes:
+            RiverLane[]
     ) {
-        this.hud = this.createHUD();
-        this.message = this.createMessage();
+        this.hud =
+            this.createHUD();
+
+        this.message =
+            this.createMessage();
 
         this.updateHUD();
     }
 
-    update(dt: number): void {
+    update(): void {
         if (this.isDead) return;
 
+        const completedMove =
+            this.player.consumeCompletedMove();
+
+        if (completedMove) {
+            this.handleCompletedMove(
+                completedMove
+            );
+        }
+
         this.checkVehicleCollisions();
-        this.checkRiver(dt);
+
+        if (this.isDead) return;
+
+        this.checkRiver();
+
+        if (this.isDead) return;
+
         this.checkForwardProgress();
         this.checkGoal();
     }
 
-    private checkRiver(dt: number): void {
-        const frogPosition = this.player.getPosition();
+    // --------------------------------------------------
+    // MOVEMENT RESULT
+    // --------------------------------------------------
 
-        // These are our three playable river rows.
+    private handleCompletedMove(
+        move: PlayerMove
+    ): void {
+        if (
+            !this.ridingLog ||
+            !this.ridingLane ||
+            this.ridingSlot === null
+        ) {
+            return;
+        }
+
+        // ----------------------------------------------
+        // LEFT / RIGHT WHILE ON A LOG
+        // ----------------------------------------------
+
+        if (move.x !== 0) {
+            const newSlot =
+                this.ridingSlot +
+                move.x;
+
+            // Still on the same log.
+            if (
+                this.ridingLane.isValidSlot(
+                    newSlot
+                )
+            ) {
+                this.ridingSlot =
+                    newSlot;
+
+                return;
+            }
+
+            // Frogger jumped beyond the end
+            // of the log.
+            //
+            // He's no longer attached to it.
+            this.clearRidingLog();
+
+            return;
+        }
+
+        // ----------------------------------------------
+        // FORWARD / BACKWARD FROM A LOG
+        // ----------------------------------------------
+
+        if (move.z !== 0) {
+            // We left this log.
+            //
+            // checkRiver() will determine
+            // whether we landed on another
+            // log or directly in the water.
+            this.clearRidingLog();
+        }
+    }
+
+    // --------------------------------------------------
+    // RIVER
+    // --------------------------------------------------
+
+    private checkRiver(): void {
+        const frogPosition =
+            this.player.getPosition();
+
         const isInRiver =
             frogPosition.z <= -6 &&
             frogPosition.z >= -8;
 
+        // Frog isn't in a river row.
         if (!isInRiver) {
+            if (
+                !this.player
+                    .isCurrentlyMoving()
+            ) {
+                this.clearRidingLog();
+            }
+
             return;
         }
 
-        // Don't test for drowning while the frog is in
-        // the middle of its hop.
-        if (this.player.isCurrentlyMoving()) {
+        // Don't perform landing checks
+        // in the middle of a hop.
+        if (
+            this.player
+                .isCurrentlyMoving()
+        ) {
             return;
         }
 
-        for (const lane of this.riverLanes) {
-            const laneDistance = Math.abs(
-                frogPosition.z - lane.logs[0].getPosition().z
-            );
+        // ----------------------------------------------
+        // ALREADY RIDING A KNOWN SLOT
+        // ----------------------------------------------
 
-            if (laneDistance > 0.5) {
+        if (
+            this.ridingLog &&
+            this.ridingLane &&
+            this.ridingSlot !== null
+        ) {
+            const slotX =
+                this.ridingLane
+                    .getSlotX(
+                        this.ridingLog,
+                        this.ridingSlot
+                    );
+
+            this.player
+                .setPlatformVelocityX(
+                    this.ridingLane.speed *
+                        this.ridingLane
+                            .direction
+                );
+
+            this.player.entity
+                .setPosition(
+                    slotX,
+                    frogPosition.y,
+                    this.ridingLane.z
+                );
+
+            if (
+                slotX < -7.5 ||
+                slotX > 7.5
+            ) {
+                this.killPlayer(
+                    'SPLASH!'
+                );
+            }
+
+            return;
+        }
+
+        // ----------------------------------------------
+        // JUST LANDED IN THE RIVER
+        // ----------------------------------------------
+
+        for (
+            const lane
+            of this.riverLanes
+        ) {
+            if (
+                Math.abs(
+                    frogPosition.z -
+                        lane.z
+                ) > 0.1
+            ) {
                 continue;
             }
 
-            for (const log of lane.logs) {
-                const logPosition = log.getPosition();
-
-                const logLength = log.getLocalScale().x;
-
-                const xDistance = Math.abs(
-                    frogPosition.x - logPosition.x
-                );
-
-                // Frog is standing on this log.
-                if (xDistance <= logLength / 2 + 0.25) {
-                    const newX =
-                        frogPosition.x +
-                        lane.speed *
-                        lane.direction *
-                        dt;
-
-                    this.player.entity.setPosition(
-                        newX,
-                        frogPosition.y,
-                        frogPosition.z
+            for (
+                const log
+                of lane.logs
+            ) {
+                const slot =
+                    lane.getClosestSlot(
+                        log,
+                        frogPosition.x
                     );
 
-                    // The log carried us completely off-screen.
-                    if (newX < -7.5 || newX > 7.5) {
-                        this.killPlayer('SPLASH!');
-                    }
-
-                    return;
+                if (slot === null) {
+                    continue;
                 }
+
+                this.ridingLog =
+                    log;
+
+                this.ridingLane =
+                    lane;
+
+                this.ridingSlot =
+                    slot;
+
+                this.player
+                    .setPlatformVelocityX(
+                        lane.speed *
+                            lane.direction
+                    );
+
+                const slotX =
+                    lane.getSlotX(
+                        log,
+                        slot
+                    );
+
+                // Snap precisely to the
+                // center of the slot.
+                this.player.entity
+                    .setPosition(
+                        slotX,
+                        frogPosition.y,
+                        lane.z
+                    );
+
+                return;
             }
 
-            // We found the river lane, but didn't find
-            // a log underneath the frog.
-            this.killPlayer('SPLASH!');
+            // We're in a river lane,
+            // but no platform contains us.
+            this.killPlayer(
+                'SPLASH!'
+            );
+
             return;
         }
     }
 
-    private checkForwardProgress(): void {
-        const frogPosition = this.player.getPosition();
+    private clearRidingLog():
+        void {
+        this.ridingLog = null;
+        this.ridingLane = null;
+        this.ridingSlot = null;
 
-        if (frogPosition.z < this.furthestZ) {
-            this.furthestZ = frogPosition.z;
+        this.player
+            .clearPlatformVelocity();
+    }
+
+    // --------------------------------------------------
+    // SCORE
+    // --------------------------------------------------
+
+    private checkForwardProgress():
+        void {
+        const frogPosition =
+            this.player.getPosition();
+
+        // Don't score fractional positions
+        // during the middle of a hop.
+        if (
+            this.player
+                .isCurrentlyMoving()
+        ) {
+            return;
+        }
+
+        const row =
+            Math.round(
+                frogPosition.z
+            );
+
+        if (row < this.furthestZ) {
+            this.furthestZ = row;
 
             this.score += 10;
 
@@ -110,11 +324,24 @@ export class Game {
         }
     }
 
-    private checkGoal(): void {
-        const frogPosition = this.player.getPosition();
+    // --------------------------------------------------
+    // GOAL
+    // --------------------------------------------------
 
-        // Far side of the current map
-        if (frogPosition.z <= -10) {
+    private checkGoal(): void {
+        if (
+            this.player
+                .isCurrentlyMoving()
+        ) {
+            return;
+        }
+
+        const frogPosition =
+            this.player.getPosition();
+
+        if (
+            frogPosition.z <= -10
+        ) {
             this.reachGoal();
         }
     }
@@ -124,13 +351,15 @@ export class Game {
 
         this.isDead = true;
 
+        this.clearRidingLog();
+
         this.score += 100;
 
         this.updateHUD();
+
         this.showMessage('+100');
 
         window.setTimeout(() => {
-            // Reset forward-progress tracking for the next crossing.
             this.furthestZ = 5;
 
             this.player.reset();
@@ -141,64 +370,90 @@ export class Game {
         }, 650);
     }
 
-    private checkVehicleCollisions(): void {
-        const frogPosition = this.player.getPosition();
+    // --------------------------------------------------
+    // TRAFFIC
+    // --------------------------------------------------
 
-        for (const lane of this.trafficLanes) {
-            for (const vehicle of lane.vehicles) {
-                const vehiclePosition = vehicle.getPosition();
+    private checkVehicleCollisions():
+        void {
+        if (
+            this.player
+                .isCurrentlyMoving()
+        ) {
+            return;
+        }
 
-                // First make sure we're roughly in the same lane.
-                const zDistance = Math.abs(
-                    frogPosition.z - vehiclePosition.z
-                );
+        const frogPosition =
+            this.player.getPosition();
 
-                if (zDistance > 0.6) {
-                    continue;
-                }
+        for (
+            const lane
+            of this.trafficLanes
+        ) {
+            // Only test the row Frogger
+            // is actually standing on.
+            if (
+                Math.abs(
+                    frogPosition.z -
+                        lane.z
+                ) > 0.1
+            ) {
+                continue;
+            }
 
-                // Vehicle width based on its current scale.
-                const vehicleWidth =
-                    vehicle.getLocalScale().x;
-
-                const xDistance = Math.abs(
-                    frogPosition.x - vehiclePosition.x
-                );
-
-                const collisionDistance =
-                    vehicleWidth / 2 + 0.35;
-
-                if (xDistance < collisionDistance) {
+            for (
+                const vehicle
+                of lane.vehicles
+            ) {
+                if (
+                    lane.containsPlayer(
+                        vehicle,
+                        frogPosition.x
+                    )
+                ) {
                     this.killPlayer();
+
                     return;
                 }
             }
         }
     }
 
-    private killPlayer(message = 'SPLAT!'): void {
+    // --------------------------------------------------
+    // DEATH
+    // --------------------------------------------------
+
+    private killPlayer(
+        message = 'SPLAT!'
+    ): void {
         if (this.isDead) return;
 
         this.isDead = true;
+
+        this.clearRidingLog();
+
         this.lives--;
 
         this.updateHUD();
 
         this.showMessage(message);
 
-        // Hide frog briefly.
-        this.player.entity.enabled = false;
+        this.player.entity.enabled =
+            false;
 
         window.setTimeout(() => {
             if (this.lives <= 0) {
                 this.gameOver();
+
                 return;
             }
 
             this.furthestZ = 5;
 
             this.player.reset();
-            this.player.entity.enabled = true;
+
+            this.player.entity.enabled =
+                true;
 
             this.hideMessage();
 
@@ -207,39 +462,63 @@ export class Game {
     }
 
     private gameOver(): void {
-        this.showMessage('GAME OVER');
+        this.showMessage(
+            'GAME OVER'
+        );
 
         window.setTimeout(() => {
             this.lives = 3;
             this.score = 0;
             this.furthestZ = 5;
 
+            this.clearRidingLog();
+
             this.player.reset();
-            this.player.entity.enabled = true;
+
+            this.player.entity.enabled =
+                true;
 
             this.updateHUD();
+
             this.hideMessage();
 
             this.isDead = false;
         }, 1800);
     }
 
-    private createHUD(): HTMLDivElement {
-        const hud = document.createElement('div');
+    // --------------------------------------------------
+    // HUD
+    // --------------------------------------------------
+
+    private createHUD():
+        HTMLDivElement {
+        const hud =
+            document.createElement(
+                'div'
+            );
 
         hud.id = 'game-hud';
 
-        document.body.appendChild(hud);
+        document.body.appendChild(
+            hud
+        );
 
         return hud;
     }
 
-    private createMessage(): HTMLDivElement {
-        const message = document.createElement('div');
+    private createMessage():
+        HTMLDivElement {
+        const message =
+            document.createElement(
+                'div'
+            );
 
-        message.id = 'game-message';
+        message.id =
+            'game-message';
 
-        document.body.appendChild(message);
+        document.body.appendChild(
+            message
+        );
 
         return message;
     }
@@ -258,18 +537,28 @@ export class Game {
                 </span>
 
                 <span>
-                    LIVES ${'●'.repeat(this.lives)}
+                    LIVES ${'●'.repeat(
+                        this.lives
+                    )}
                 </span>
             </div>
         `;
     }
 
-    private showMessage(text: string): void {
-        this.message.textContent = text;
-        this.message.classList.add('visible');
+    private showMessage(
+        text: string
+    ): void {
+        this.message.textContent =
+            text;
+
+        this.message.classList.add(
+            'visible'
+        );
     }
 
     private hideMessage(): void {
-        this.message.classList.remove('visible');
+        this.message.classList.remove(
+            'visible'
+        );
     }
 }

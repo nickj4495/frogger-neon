@@ -4,71 +4,100 @@ export interface TrafficLaneOptions {
     z: number;
     speed: number;
     direction: 1 | -1;
+
     vehicleCount: number;
     spacing: number;
+
+    // Number of Frogger-sized cells
+    // occupied by each vehicle.
+    vehicleSize: number;
+
     color: pc.Color;
-    vehicleLength?: number;
 }
 
 export class TrafficLane {
     public vehicles: pc.Entity[] = [];
 
-    private readonly leftEdge = -10;
-    private readonly rightEdge = 10;
+    public readonly z: number;
+    public readonly speed: number;
+    public readonly direction: 1 | -1;
+    public readonly vehicleSize: number;
+
+    private readonly leftEdge = -11;
+    private readonly rightEdge = 11;
 
     constructor(
         private app: pc.Application,
         options: TrafficLaneOptions
     ) {
-        const vehicleLength = options.vehicleLength ?? 2;
+        this.z = options.z;
+        this.speed = options.speed;
+        this.direction = options.direction;
+        this.vehicleSize = options.vehicleSize;
 
-        for (let i = 0; i < options.vehicleCount; i++) {
-            const vehicle = new pc.Entity(`Vehicle-${options.z}-${i}`);
+        for (
+            let i = 0;
+            i < options.vehicleCount;
+            i++
+        ) {
+            const vehicle = new pc.Entity(
+                `Vehicle-${options.z}-${i}`
+            );
 
             vehicle.addComponent('render', {
                 type: 'box',
             });
 
+            // One world unit = one gameplay cell.
             vehicle.setLocalScale(
-                vehicleLength,
+                options.vehicleSize,
                 0.7,
                 0.75
             );
 
-            const material = new pc.StandardMaterial();
-            material.diffuse = options.color;
-            material.emissive = options.color;
-            material.emissiveIntensity = 0.25;
+            const material =
+                new pc.StandardMaterial();
+
+            material.diffuse =
+                options.color;
+
+            material.emissive =
+                options.color;
+
+            material.emissiveIntensity =
+                0.25;
+
             material.update();
 
             if (vehicle.render) {
-                vehicle.render.material = material;
+                vehicle.render.material =
+                    material;
             }
 
-            const startX =
-                -7 +
-                i * options.spacing;
-
             vehicle.setPosition(
-                startX,
+                -7 +
+                    i * options.spacing,
                 0.45,
                 options.z
             );
 
-            this.app.root.addChild(vehicle);
-            this.vehicles.push(vehicle);
-        }
+            this.app.root.addChild(
+                vehicle
+            );
 
-        this.speed = options.speed;
-        this.direction = options.direction;
+            this.vehicles.push(
+                vehicle
+            );
+        }
     }
 
-    private speed: number;
-    private direction: 1 | -1;
-
     update(dt: number): void {
-        for (const vehicle of this.vehicles) {
-            const position = vehicle.getPosition();
+        for (
+            const vehicle
+            of this.vehicles
+        ) {
+            const position =
+                vehicle.getPosition();
 
             let x =
                 position.x +
@@ -96,5 +125,29 @@ export class TrafficLane {
                 position.z
             );
         }
+    }
+
+    /**
+     * Returns whether Frogger's one-cell
+     * footprint overlaps this vehicle.
+     */
+    public containsPlayer(
+        vehicle: pc.Entity,
+        playerX: number
+    ): boolean {
+        const vehicleX =
+            vehicle.getPosition().x;
+
+        const halfVehicle =
+            this.vehicleSize / 2;
+
+        const halfPlayer = 0.5;
+
+        return (
+            Math.abs(
+                playerX - vehicleX
+            ) <
+            halfVehicle + halfPlayer
+        );
     }
 }
