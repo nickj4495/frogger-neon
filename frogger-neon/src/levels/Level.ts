@@ -3,6 +3,11 @@ import * as pc from 'playcanvas';
 import { TrafficLane } from '../TrafficLane';
 import { RiverLane } from '../RiverLane';
 
+import {
+    CELL_SIZE,
+    GRID_WIDTH,
+} from '../core/Grid';
+
 import type {
     LevelDefinition,
     GroundType,
@@ -30,6 +35,7 @@ export class Level {
         this.buildGround();
         this.buildTraffic();
         this.buildRiver();
+        this.buildGoals();
     }
 
     private buildGround(): void {
@@ -49,18 +55,36 @@ export class Level {
                 }
             );
 
+            const topRow =
+                Math.max(
+                    section.startRow,
+                    section.endRow
+                );
+
+            const bottomRow =
+                Math.min(
+                    section.startRow,
+                    section.endRow
+                );
+
+            const rowCount =
+                topRow - bottomRow + 1;
+
+            const centerZ =
+                (topRow + bottomRow) / 2;
+
             entity.setPosition(
                 0,
                 this.getGroundY(
                     section.type
                 ),
-                section.z
+                centerZ * CELL_SIZE
             );
 
             entity.setLocalScale(
-                16,
+                GRID_WIDTH,
                 0.5,
-                section.depth
+                rowCount * CELL_SIZE
             );
 
             const material =
@@ -220,22 +244,30 @@ export class Level {
     public getGroundTypeAt(
         z: number
     ): GroundType | null {
+        const row =
+            Math.round(
+                z / CELL_SIZE
+            );
+
         for (
             const section
             of this.definition.ground
         ) {
-            const halfDepth =
-                section.depth / 2;
+            const topRow =
+                Math.max(
+                    section.startRow,
+                    section.endRow
+                );
 
-            const minZ =
-                section.z - halfDepth;
-
-            const maxZ =
-                section.z + halfDepth;
+            const bottomRow =
+                Math.min(
+                    section.startRow,
+                    section.endRow
+                );
 
             if (
-                z >= minZ &&
-                z <= maxZ
+                row <= topRow &&
+                row >= bottomRow
             ) {
                 return section.type;
             }
@@ -271,5 +303,63 @@ export class Level {
 
     public getGoalZ(): number {
         return this.definition.goalZ;
+    }
+
+    private buildGoals(): void {
+        for (
+            const goal
+            of this.definition.goals
+        ) {
+            const entity =
+                new pc.Entity(
+                    'Goal Frog'
+                );
+
+            entity.addComponent(
+                'render',
+                {
+                    type: 'box',
+                }
+            );
+
+            entity.setPosition(
+                goal.x,
+                0.35,
+                goal.z
+            );
+
+            entity.setLocalScale(
+                0.75,
+                0.7,
+                0.75
+            );
+
+            const material =
+                new pc.StandardMaterial();
+
+            material.diffuse =
+                goal.color;
+
+            material.emissive =
+                goal.color;
+
+            material.emissiveIntensity =
+                0.7;
+
+            material.update();
+
+            if (entity.render) {
+                entity.render.material =
+                    material;
+            }
+
+            this.app.root.addChild(
+                entity
+            );
+
+            this.entities.push(
+                entity
+            );
+        }
     }
 }

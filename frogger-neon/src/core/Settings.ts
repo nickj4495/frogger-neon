@@ -11,11 +11,12 @@ export interface GameSettings {
 }
 
 const DEFAULT_SETTINGS: GameSettings = {
-    cameraZoom: 17,
-    cameraHeight: 18,
-    cameraFollowSpeed: 5,
-    cameraDeadZone: 2,
-    cameraHorizontalFollow: 0.025,
+    cameraZoom: 4.75,
+    cameraHeight: 10,
+
+    cameraFollowSpeed: 7,
+    cameraDeadZone: 1,
+    cameraHorizontalFollow: 0.04,
 
     masterVolume: 1,
     musicVolume: 0.8,
@@ -44,10 +45,11 @@ export class Settings {
             const parsed =
                 JSON.parse(saved);
 
-            this.values = {
-                ...DEFAULT_SETTINGS,
-                ...parsed,
-            };
+            this.values =
+                this.sanitize({
+                    ...DEFAULT_SETTINGS,
+                    ...parsed,
+                });
         } catch {
             console.warn(
                 'Could not load saved settings.'
@@ -62,10 +64,11 @@ export class Settings {
     public static update(
         changes: Partial<GameSettings>
     ): void {
-        this.values = {
-            ...this.values,
-            ...changes,
-        };
+        this.values =
+            this.sanitize({
+                ...this.values,
+                ...changes,
+            });
 
         this.save();
     }
@@ -85,5 +88,33 @@ export class Settings {
                 this.values
             )
         );
+    }
+
+    private static sanitize(
+        settings: GameSettings
+    ): GameSettings {
+        return {
+            ...settings,
+
+            cameraZoom: Math.max(
+                4.25,
+                Math.min(
+                    6,
+                    settings.cameraZoom
+                )
+            ),
+
+            cameraHeight: Math.max(
+                9,
+                Math.min(
+                    12,
+                    settings.cameraHeight
+                )
+            ),
+
+            cameraFollowSpeed: 7,
+            cameraDeadZone: 1,
+            cameraHorizontalFollow: 0.04,
+        };
     }
 }

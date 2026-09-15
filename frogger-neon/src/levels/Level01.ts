@@ -10,60 +10,62 @@ export const Level01: LevelDefinition = {
     name: 'Neon Crossing',
 
     startX: 0,
-    startZ: 5,
+    startZ: 7,
 
-    goalZ: -10,
+    goalZ: -6,
 
     ground: [
         {
             name: 'Start',
             type: 'safe',
 
-            z: 5,
-            depth: 4,
+            startRow: 7,
+            endRow: 6,
         },
 
         {
             name: 'Road',
             type: 'road',
 
-            z: 0,
-            depth: 6,
+            startRow: 5,
+            endRow: 1,
         },
 
         {
             name: 'Median',
             type: 'safe',
 
-            z: -4,
-            depth: 2,
+            startRow: 0,
+            endRow: 0,
         },
 
         {
             name: 'River',
             type: 'water',
 
-            z: -7,
-            depth: 4,
+            startRow: -1,
+            endRow: -5,
         },
 
         {
             name: 'Goal',
             type: 'goal',
 
-            z: -11,
-            depth: 2,
+            startRow: -6,
+            endRow: -6,
         },
     ],
 
     traffic: [
+        // Lane 1:
+        // slower medium cars
         {
-            z: 2,
+            z: 5,
 
             speed: 3,
             direction: 1,
 
-            vehicleCount: 3,
+            vehicleCount: 4,
             spacing: 6,
 
             vehicleSize: 2,
@@ -75,16 +77,18 @@ export const Level01: LevelDefinition = {
             ),
         },
 
+        // Lane 2:
+        // fast small cars
         {
-            z: 0,
+            z: 4,
 
-            speed: 4.5,
+            speed: 5.5,
             direction: -1,
 
-            vehicleCount: 3,
-            spacing: 7,
+            vehicleCount: 5,
+            spacing: 5,
 
-            vehicleSize: 3,
+            vehicleSize: 1,
 
             color: new pc.Color(
                 0.05,
@@ -93,16 +97,18 @@ export const Level01: LevelDefinition = {
             ),
         },
 
+        // Lane 3:
+        // large slow trucks
         {
-            z: -2,
+            z: 3,
 
-            speed: 5.5,
+            speed: 2.4,
             direction: 1,
 
-            vehicleCount: 4,
-            spacing: 5,
+            vehicleCount: 3,
+            spacing: 8,
 
-            vehicleSize: 2,
+            vehicleSize: 3,
 
             color: new pc.Color(
                 1,
@@ -110,43 +116,159 @@ export const Level01: LevelDefinition = {
                 0.05
             ),
         },
+
+        // Lane 4:
+        // fast medium traffic
+        {
+            z: 2,
+
+            speed: 6.5,
+            direction: -1,
+
+            vehicleCount: 4,
+            spacing: 6,
+
+            vehicleSize: 2,
+
+            color: new pc.Color(
+                0.65,
+                0.1,
+                1
+            ),
+        },
+
+        // Lane 5:
+        // dense small traffic
+        {
+            z: 1,
+
+            speed: 4,
+            direction: 1,
+
+            vehicleCount: 6,
+            spacing: 4,
+
+            vehicleSize: 1,
+
+            color: new pc.Color(
+                0.05,
+                1,
+                0.65
+            ),
+        },
     ],
 
     river: [
         {
-            z: -6,
+            z: -1,
 
             speed: 2,
             direction: 1,
 
-            logCount: 3,
+            logCount: 4,
             spacing: 7,
 
             logSize: 3,
         },
 
         {
-            z: -7,
+            z: -2,
 
-            speed: 2.8,
+            speed: 3,
             direction: -1,
 
-            logCount: 3,
-            spacing: 7,
+            logCount: 4,
+            spacing: 6,
 
             logSize: 2,
         },
 
         {
-            z: -8,
+            z: -3,
 
-            speed: 3.5,
+            speed: 2.5,
             direction: 1,
 
             logCount: 3,
+            spacing: 8,
+
+            logSize: 4,
+        },
+
+        {
+            z: -4,
+
+            speed: 3.5,
+            direction: -1,
+
+            logCount: 4,
             spacing: 7,
 
             logSize: 3,
+        },
+
+        {
+            z: -5,
+
+            speed: 4,
+            direction: 1,
+
+            logCount: 4,
+            spacing: 6,
+
+            logSize: 2,
+        },
+    ],
+
+    goals: [
+        {
+            x: -8,
+            z: -6,
+            color: new pc.Color(
+                1,
+                0.05,
+                0.5
+            ),
+        },
+
+        {
+            x: -4,
+            z: -6,
+            color: new pc.Color(
+                0.05,
+                0.8,
+                1
+            ),
+        },
+
+        {
+            x: 0,
+            z: -6,
+            color: new pc.Color(
+                0.1,
+                1,
+                0.45
+            ),
+        },
+
+        {
+            x: 4,
+            z: -6,
+            color: new pc.Color(
+                0.65,
+                0.1,
+                1
+            ),
+        },
+
+        {
+            x: 8,
+            z: -6,
+            color: new pc.Color(
+                1,
+                0.4,
+                0.05
+            ),
         },
     ],
 };

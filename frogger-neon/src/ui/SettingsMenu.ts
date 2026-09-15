@@ -103,48 +103,21 @@ export class SettingsMenu {
                 </div>
 
                 ${this.createSlider(
-                    'Camera Zoom',
+                    'Camera Distance',
                     'cameraZoom',
-                    10,
-                    30,
-                    1,
+                    4.25,
+                    6,
+                    0.25,
                     settings.cameraZoom
                 )}
 
                 ${this.createSlider(
                     'Camera Height',
                     'cameraHeight',
-                    8,
-                    30,
-                    1,
+                    9,
+                    12,
+                    0.25,
                     settings.cameraHeight
-                )}
-
-                ${this.createSlider(
-                    'Follow Speed',
-                    'cameraFollowSpeed',
-                    1,
-                    15,
-                    0.5,
-                    settings.cameraFollowSpeed
-                )}
-
-                ${this.createSlider(
-                    'Camera Dead Zone',
-                    'cameraDeadZone',
-                    0,
-                    6,
-                    0.5,
-                    settings.cameraDeadZone
-                )}
-
-                ${this.createSlider(
-                    'Horizontal Follow',
-                    'cameraHorizontalFollow',
-                    0,
-                    0.15,
-                    0.005,
-                    settings.cameraHorizontalFollow
                 )}
 
                 <div class="settings-header">

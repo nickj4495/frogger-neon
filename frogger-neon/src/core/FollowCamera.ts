@@ -84,7 +84,7 @@ export class FollowCamera {
         this.lookTarget.set(
             this.trackedX,
             0,
-            this.trackedZ - 3
+            this.trackedZ - 1.5
         );
 
         this.camera.lookAt(

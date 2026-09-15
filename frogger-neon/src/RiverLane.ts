@@ -4,6 +4,11 @@ import {
     CELL_SIZE,
 } from './core/Grid';
 
+import {
+    MOVING_OBJECT_MIN_X,
+    MOVING_OBJECT_MAX_X,
+} from './core/Grid';
+
 export interface RiverLaneOptions {
     z: number;
     speed: number;
@@ -25,8 +30,8 @@ export class RiverLane {
     public readonly z: number;
     public readonly logSize: number;
 
-    private readonly leftEdge = -11;
-    private readonly rightEdge = 11;
+    private readonly leftEdge = MOVING_OBJECT_MIN_X;
+    private readonly rightEdge = MOVING_OBJECT_MAX_X;
 
     constructor(
         private app: pc.Application,

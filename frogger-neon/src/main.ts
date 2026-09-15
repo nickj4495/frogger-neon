@@ -150,8 +150,12 @@ app.root.addChild(light);
 const camera = new pc.Entity('Camera');
 
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.005, 0.008, 0.02),
-    fov: 45,
+    clearColor: new pc.Color(
+        0.005,
+        0.008,
+        0.02
+    ),
+    fov: 38,
 });
 
 camera.setPosition(0, 18, 14);

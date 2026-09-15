@@ -8,14 +8,10 @@ export type GroundType =
 
 export interface GroundSectionDefinition {
     name: string;
-
     type: GroundType;
 
-    z: number;
-
-    // Length along the Z axis, measured
-    // in Frogger-sized cells.
-    depth: number;
+    startRow: number;
+    endRow: number;
 }
 
 export interface TrafficLaneDefinition {
@@ -46,6 +42,12 @@ export interface RiverLaneDefinition {
     logSize: number;
 }
 
+export interface GoalDefinition {
+    x: number;
+    z: number;
+    color: pc.Color;
+}
+
 export interface LevelDefinition {
     id: string;
 
@@ -61,4 +63,6 @@ export interface LevelDefinition {
     traffic: TrafficLaneDefinition[];
 
     river: RiverLaneDefinition[];
+
+    goals: GoalDefinition[];
 }
