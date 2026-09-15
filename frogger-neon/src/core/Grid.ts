@@ -3,9 +3,6 @@ export const CELL_SIZE = 1;
 export const GRID_MIN_X = -7;
 export const GRID_MAX_X = 7;
 
-export const PLAYER_START_X = 0;
-export const PLAYER_START_Z = 5;
-
 export function snapToGrid(
     value: number
 ): number {

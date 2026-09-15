@@ -2,8 +2,6 @@ import * as pc from 'playcanvas';
 
 import {
     CELL_SIZE,
-    PLAYER_START_X,
-    PLAYER_START_Z,
     snapToGrid,
     clampToGrid,
 } from './core/Grid';
@@ -14,15 +12,6 @@ export interface PlayerMove {
 }
 
 export class Player {
-    public entity: pc.Entity;
-
-    private readonly startPosition =
-        new pc.Vec3(
-            PLAYER_START_X,
-            0.5,
-            PLAYER_START_Z
-        );
-
     private isMoving = false;
 
     private platformVelocityX = 0;
@@ -43,11 +32,24 @@ export class Player {
 
     constructor(
         private app: pc.Application,
-        entity: pc.Entity
+        public entity: pc.Entity,
+        private startPosition: pc.Vec3
     ) {
-        this.entity = entity;
+        // Keep our own copy so the Player's
+        // spawn point cannot accidentally be
+        // changed from outside this class.
+        this.startPosition =
+            startPosition.clone();
 
         this.entity.setPosition(
+            this.startPosition
+        );
+
+        this.moveStart.copy(
+            this.startPosition
+        );
+
+        this.moveTarget.copy(
             this.startPosition
         );
     }
@@ -64,27 +66,45 @@ export class Player {
     private handleInput(): void {
         const keyboard = this.app.keyboard;
 
-        if (!keyboard) return;
+        if (!keyboard) {
+            return;
+        }
 
         let x = 0;
         let z = 0;
 
+        // Forward
         if (
             keyboard.wasPressed(pc.KEY_W) ||
             keyboard.wasPressed(pc.KEY_UP)
         ) {
             z = -CELL_SIZE;
-        } else if (
+        }
+
+        // Backward
+        else if (
             keyboard.wasPressed(pc.KEY_S) ||
             keyboard.wasPressed(pc.KEY_DOWN)
         ) {
             z = CELL_SIZE;
-        } else if (
+        }
+
+        // Screen-left.
+        //
+        // Our current camera orientation means
+        // screen-left is positive world X.
+        else if (
             keyboard.wasPressed(pc.KEY_A) ||
             keyboard.wasPressed(pc.KEY_LEFT)
         ) {
             x = -CELL_SIZE;
-        } else if (
+        }
+
+        // Screen-right.
+        //
+        // Our current camera orientation means
+        // screen-right is negative world X.
+        else if (
             keyboard.wasPressed(pc.KEY_D) ||
             keyboard.wasPressed(pc.KEY_RIGHT)
         ) {
@@ -118,14 +138,16 @@ export class Player {
         // --------------------------------------------------
 
         if (x !== 0) {
-            if (this.platformVelocityX !== 0) {
-                // On a moving platform:
-                // move exactly one slot relative
-                // to the platform.
+            if (
+                this.platformVelocityX !== 0
+            ) {
+                // While riding a moving platform,
+                // move exactly one logical slot
+                // relative to that platform.
                 this.moveTarget.x += x;
             } else {
-                // On solid ground:
-                // stay aligned to the world grid.
+                // On normal ground, Frogger stays
+                // aligned to the universal grid.
                 this.moveTarget.x =
                     snapToGrid(
                         this.moveStart.x
@@ -134,19 +156,21 @@ export class Player {
         }
 
         // --------------------------------------------------
-        // FORWARD / BACKWARD
+        // FORWARD / BACKWARD MOVEMENT
         // --------------------------------------------------
 
         if (z !== 0) {
             this.moveTarget.z =
-                Math.round(
+                snapToGrid(
                     this.moveStart.z
                 ) + z;
         }
 
-        // Don't allow movement outside the
-        // playable board on normal ground.
-        if (this.platformVelocityX === 0) {
+        // On normal ground Frogger cannot leave
+        // the playable horizontal board.
+        if (
+            this.platformVelocityX === 0
+        ) {
             this.moveTarget.x =
                 clampToGrid(
                     this.moveTarget.x
@@ -160,10 +184,12 @@ export class Player {
     private animateMovement(
         dt: number
     ): void {
-        // If Frogger started this hop while
-        // riding a log, the entire hop moves
-        // along with the log.
-        if (this.platformVelocityX !== 0) {
+        // If this hop began while Frogger was
+        // riding a moving platform, move both
+        // ends of the hop along with it.
+        if (
+            this.platformVelocityX !== 0
+        ) {
             const platformMovement =
                 this.platformVelocityX * dt;
 
@@ -195,8 +221,9 @@ export class Player {
         );
 
         const hopHeight =
-            Math.sin(t * Math.PI) *
-            0.55;
+            Math.sin(
+                t * Math.PI
+            ) * 0.55;
 
         const y =
             pc.math.lerp(
@@ -219,8 +246,9 @@ export class Player {
 
             this.isMoving = false;
 
-            // Tell Game.ts exactly what
-            // movement just finished.
+            // Game.ts consumes this once so it
+            // knows exactly which logical hop
+            // Frogger just completed.
             this.completedMove = {
                 ...this.currentMove,
             };
@@ -269,6 +297,16 @@ export class Player {
         };
 
         this.entity.setPosition(
+            this.startPosition
+        );
+
+        // Reset these as well so no stale
+        // movement data survives a death.
+        this.moveStart.copy(
+            this.startPosition
+        );
+
+        this.moveTarget.copy(
             this.startPosition
         );
     }

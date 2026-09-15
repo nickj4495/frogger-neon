@@ -2,6 +2,8 @@ import * as pc from 'playcanvas';
 
 import type { GameState } from './core/GameState';
 
+import { Level } from './levels/Level';
+
 import { Player } from './Player';
 import type { PlayerMove } from './Player';
 import { TrafficLane } from './TrafficLane';
@@ -11,7 +13,7 @@ export class Game {
     private lives = 3;
     private score = 0;
 
-    private furthestZ = 5;
+    private furthestZ: number;
 
     private state: GameState = 'playing';
 
@@ -37,6 +39,7 @@ export class Game {
 
     constructor(
         private player: Player,
+        private level: Level,
         private trafficLanes:
             TrafficLane[],
         private riverLanes:
@@ -149,8 +152,9 @@ export class Game {
             this.player.getPosition();
 
         const isInRiver =
-            frogPosition.z <= -6 &&
-            frogPosition.z >= -8;
+            this.level.isWaterAt(
+                frogPosition.z
+            );
 
         // Frog isn't in a river row.
         if (!isInRiver) {
@@ -347,7 +351,9 @@ export class Game {
             this.player.getPosition();
 
         if (
-            frogPosition.z <= -10
+            this.level.isGoalAt(
+                frogPosition.z
+            )
         ) {
             this.reachGoal();
         }
@@ -369,7 +375,8 @@ export class Game {
         this.showMessage('+100');
 
         window.setTimeout(() => {
-            this.furthestZ = 5;
+            this.furthestZ =
+                this.level.definition.startZ;
 
             this.player.reset();
 
@@ -459,7 +466,8 @@ export class Game {
                 return;
             }
 
-            this.furthestZ = 5;
+            this.furthestZ =
+                this.level.definition.startZ;
 
             this.player.reset();
 
@@ -483,7 +491,8 @@ export class Game {
         window.setTimeout(() => {
             this.lives = 3;
             this.score = 0;
-            this.furthestZ = 5;
+            this.furthestZ =
+                this.level.definition.startZ;
 
             this.clearRidingLog();
 
