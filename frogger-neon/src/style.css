@@ -457,3 +457,422 @@ canvas {
 
     display: none;
 }
+
+/* ==========================================
+   ATTEMPT TIMER
+   ========================================== */
+
+#timer-hud {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    z-index: 1000;
+
+    min-width: 90px;
+    padding: 8px 14px;
+
+    transform:
+        translateX(-50%);
+
+    border:
+        1px solid
+        rgba(0, 255, 255, 0.3);
+
+    border-radius: 6px;
+
+    background:
+        rgba(0, 0, 0, 0.6);
+
+    backdrop-filter:
+        blur(6px);
+
+    text-align: center;
+    pointer-events: none;
+}
+
+.timer-hud-label {
+    margin-bottom: 3px;
+
+    color:
+        rgba(255, 255, 255, 0.55);
+
+    font-family: monospace;
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+.timer-hud-value {
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 22px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease;
+}
+
+#timer-hud.warning
+.timer-hud-value {
+    text-shadow:
+        0 0 8px
+        rgba(255, 210, 0, 0.8);
+
+    animation:
+        timer-warning-pulse
+        0.8s ease-in-out
+        infinite alternate;
+}
+
+#timer-hud.critical
+.timer-hud-value {
+    text-shadow:
+        0 0 10px
+        rgba(255, 40, 80, 0.9);
+
+    animation-duration:
+        0.3s;
+}
+
+@keyframes timer-warning-pulse {
+    from {
+        opacity: 1;
+
+        transform:
+            scale(1);
+    }
+
+    to {
+        opacity: 0.65;
+
+        transform:
+            scale(1.08);
+    }
+}
+
+/* ==========================================
+   GOAL CELEBRATION
+   ========================================== */
+
+#goal-celebration {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1500;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(0, 0, 0, 0);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.65s ease,
+        background 0.8s ease,
+        visibility 0.65s;
+}
+
+#goal-celebration.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    background:
+        rgba(0, 0, 0, 0.22);
+}
+
+.goal-celebration-panel {
+    width: min(
+        360px,
+        calc(100vw - 40px)
+    );
+
+    padding:
+        22px 28px 24px;
+
+    transform:
+        translateY(18px)
+        scale(0.96);
+
+    border:
+        1px solid
+        rgba(0, 255, 255, 0.4);
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(5, 12, 20, 0.94),
+            rgba(10, 5, 20, 0.94)
+        );
+
+    box-shadow:
+        0 0 30px
+            rgba(0, 255, 255, 0.12),
+        0 0 60px
+            rgba(255, 0, 170, 0.08);
+
+    text-align: center;
+
+    opacity: 0;
+
+    transition:
+        transform 0.8s
+            cubic-bezier(
+                0.16,
+                1,
+                0.3,
+                1
+            ),
+        opacity 0.65s ease;
+}
+
+#goal-celebration.visible
+.goal-celebration-panel {
+    transform:
+        translateY(0)
+        scale(1);
+
+    opacity: 1;
+}
+
+.goal-celebration-eyebrow {
+    margin-bottom: 6px;
+
+    color:
+        rgba(255, 255, 255, 0.45);
+
+    font-family: monospace;
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 3px;
+}
+
+.goal-celebration-title {
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 26px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    text-shadow:
+        0 0 12px
+        rgba(0, 255, 255, 0.45);
+}
+
+.goal-celebration-divider {
+    width: 42px;
+    height: 2px;
+
+    margin:
+        14px auto 18px;
+
+    background: #00ffff;
+
+    box-shadow:
+        0 0 10px
+        rgba(0, 255, 255, 0.8);
+}
+
+.goal-celebration-label {
+    margin-bottom: 4px;
+
+    color:
+        rgba(255, 255, 255, 0.5);
+
+    font-family: monospace;
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+.goal-celebration-time {
+    margin-bottom: 18px;
+
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 38px;
+    font-weight: 800;
+
+    line-height: 1;
+}
+
+.goal-celebration-stats {
+    display: flex;
+    justify-content: space-between;
+
+    padding-top: 12px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.1);
+
+    color:
+        rgba(255, 255, 255, 0.65);
+
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ==========================================
+   COLLECTED FROG FLIGHT
+   ========================================== */
+
+.flying-collected-frog {
+    position: fixed;
+
+    z-index: 2000;
+
+    width: 34px;
+    height: 25px;
+
+    transform:
+        translate(-50%, -50%);
+
+    border-radius:
+        45% 45% 40% 40%;
+
+    background:
+        var(--frog-color);
+
+    box-shadow:
+        0 0 10px
+            var(--frog-color),
+        0 0 24px
+            var(--frog-color);
+
+    pointer-events: none;
+}
+
+.flying-collected-frog::before,
+.flying-collected-frog::after {
+    content: '';
+
+    position: absolute;
+
+    top: -6px;
+
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    background:
+        var(--frog-color);
+}
+
+.flying-collected-frog::before {
+    left: 2px;
+}
+
+.flying-collected-frog::after {
+    right: 2px;
+}
+
+.frog-collection-icon.frog-arrived {
+    animation:
+        frog-slot-arrival
+        0.6s
+        cubic-bezier(
+            0.16,
+            1,
+            0.3,
+            1
+        );
+}
+
+@keyframes frog-slot-arrival {
+    0% {
+        transform:
+            scale(0.65);
+
+        filter:
+            brightness(3);
+    }
+
+    45% {
+        transform:
+            scale(1.35);
+
+        filter:
+            brightness(2);
+    }
+
+    100% {
+        transform:
+            scale(1);
+
+        filter:
+            brightness(1);
+    }
+}
+
+.goal-celebration-continue {
+    display: block;
+
+    width: 100%;
+
+    margin-top: 20px;
+    padding: 11px 16px;
+
+    border:
+        1px solid
+        rgba(0, 255, 255, 0.55);
+
+    border-radius: 4px;
+
+    background:
+        rgba(0, 255, 255, 0.08);
+
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 2px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.goal-celebration-continue:hover {
+    background:
+        rgba(0, 255, 255, 0.16);
+
+    border-color:
+        rgba(0, 255, 255, 0.9);
+
+    box-shadow:
+        0 0 16px
+        rgba(0, 255, 255, 0.2);
+
+    transform:
+        translateY(-1px);
+}
+
+.goal-celebration-continue:active {
+    transform:
+        translateY(1px);
+}

@@ -248,6 +248,14 @@ export class Level {
         }
     }
 
+    public getGoalIndex(
+        goal: GoalState
+    ): number {
+        return this.goals.indexOf(
+            goal
+        );
+    }
+
     public destroy(): void {
         for (
             const lane

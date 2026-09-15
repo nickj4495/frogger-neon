@@ -11,6 +11,15 @@ import { SettingsMenu } from './ui/SettingsMenu';
 import {
     FrogCollectionHUD,
 } from './ui/FrogCollectionHUD';
+import {
+    TimerHUD,
+} from './ui/TimerHUD';
+import {
+    GoalCelebration,
+} from './ui/GoalCelebration';
+import {
+    CollectedFrogAnimation,
+} from './ui/CollectedFrogAnimation';
 
 import { LevelManager } from './levels/LevelManager';
 import { Level01 } from './levels/Level01';
@@ -107,6 +116,9 @@ const frogCollectionHUD =
         level.getGoalColors()
     );
 
+const collectedFrogAnimation =
+    new CollectedFrogAnimation();
+
 // --------------------------------------------------
 // PLAYER
 // --------------------------------------------------
@@ -136,19 +148,132 @@ const movingPlatformLanes = [
     ...level.turtleLanes,
 ];
 
-const game = new Game(
-    frog,
-    level,
-    level.trafficLanes,
-    movingPlatformLanes,
-    (
-        collected
-    ) => {
-        frogCollectionHUD.update(
-            collected
-        );
-    }
-);
+const goalCelebration =
+    new GoalCelebration();
+
+const game =
+    new Game(
+        frog,
+        level,
+        level.trafficLanes,
+        movingPlatformLanes,
+
+        collected => {
+            frogCollectionHUD.update(
+                collected
+            );
+        },
+
+        result => {
+            /*
+             * 0.0s
+             *
+             * Begin cinematic push-in.
+             */
+            followCamera
+                .startGoalCelebration();
+
+            /*
+             * 1.5s
+             *
+             * Reveal results once the
+             * camera has established
+             * Frogger.
+             */
+            window.setTimeout(
+                () => {
+                    goalCelebration.show(
+                        result,
+
+                        () => {
+                            /*
+                             * Player explicitly
+                             * chooses to continue.
+                             */
+                            goalCelebration.hide();
+
+                            followCamera
+                                .endGoalCelebration();
+
+                            /*
+                             * Give the UI and
+                             * camera a short
+                             * moment to begin
+                             * easing away before
+                             * respawning.
+                             */
+                            window.setTimeout(
+                                () => {
+                                    game
+                                        .continueAfterGoal();
+                                },
+                                550
+                            );
+                        }
+                    );
+                },
+                1500
+            );
+
+            /*
+             * 3.0s
+             *
+             * Send collected frog toward
+             * its HUD slot.
+             */
+            window.setTimeout(
+                () => {
+                    const slot =
+                        frogCollectionHUD
+                            .getSlotCenter(
+                                result.goalIndex
+                            );
+
+                    if (!slot) {
+                        return;
+                    }
+
+                    const startX =
+                        window.innerWidth /
+                        2;
+
+                    const startY =
+                        window.innerHeight /
+                        2;
+
+                    collectedFrogAnimation.fly({
+                        color:
+                            result.goalColor,
+
+                        startX,
+
+                        startY,
+
+                        endX:
+                            slot.x,
+
+                        endY:
+                            slot.y,
+
+                        duration:
+                            1100,
+
+                        onComplete:
+                            () => {
+                                frogCollectionHUD
+                                    .celebrateSlot(
+                                        result.goalIndex
+                                    );
+                            },
+                    });
+                },
+                3000
+            );
+        }
+    );
+
+const timerHUD =
+    new TimerHUD();
 
 // --------------------------------------------------
 // LIGHT
@@ -251,8 +376,12 @@ app.on(
         if (game.isPlaying()) {
             frog.update(dt);
             levelManager.update(dt);
-            game.update();
+            game.update(dt);
         }
+
+        timerHUD.update(
+            game.getFrogTimeRemaining()
+        );
 
         followCamera.update(dt);
     }

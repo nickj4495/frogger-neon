@@ -26,6 +26,15 @@ import type { PlayerMove } from './Player';
 import { TrafficLane } from './TrafficLane';
 import { RiverLane } from './RiverLane';
 
+export interface GoalResult {
+    goalIndex: number;
+    goalColor: string;
+
+    time: number;
+    timeBonus: number;
+    score: number;
+}
+
 export class Game {
     private lives = 3;
     private score = 0;
@@ -33,6 +42,61 @@ export class Game {
     private furthestZ: number;
 
     private state: GameState = 'playing';
+
+    private readonly frogTimeLimit =
+        30;
+
+    private frogTimeRemaining =
+        this.frogTimeLimit;
+
+    private updateTimer(
+        dt: number
+    ): void {
+        if (
+            Debug.isTestMode()
+        ) {
+            return;
+        }
+
+        this.frogTimeRemaining -=
+            dt;
+
+        if (
+            this.frogTimeRemaining >
+            0
+        ) {
+            return;
+        }
+
+        this.frogTimeRemaining =
+            0;
+
+        this.killPlayer(
+            'TIME OUT!'
+        );
+    }
+
+    public getFrogTimeRemaining():
+        number {
+        return Math.max(
+            0,
+            this.frogTimeRemaining
+        );
+    }
+
+    public getFrogTimeElapsed():
+        number {
+        return (
+            this.frogTimeLimit -
+            this.getFrogTimeRemaining()
+        );
+    }
+
+    private resetFrogTimer():
+        void {
+        this.frogTimeRemaining =
+            this.frogTimeLimit;
+    }
 
     // --------------------------------------------------
     // RIVER STATE
@@ -67,6 +131,12 @@ export class Game {
             (
                 collected:
                     boolean[]
+            ) => void,
+
+        private onGoalCelebration?:
+            (
+                result:
+                    GoalResult
             ) => void
     ) {
         this.hud =
@@ -78,7 +148,17 @@ export class Game {
         this.updateHUD();
     }
 
-    update(): void {
+    update(
+        dt: number
+    ): void {
+        if (this.state !== 'playing') {
+            return;
+        }
+
+        this.updateTimer(
+            dt
+        );
+
         if (this.state !== 'playing') {
             return;
         }
@@ -349,7 +429,7 @@ export class Game {
     private clearRidingPlatform():
         void {
         this.ridingPlatform = null;
-        this.ridingPlatform = null;
+        this.ridingLane = null;
         this.ridingSlot = null;
 
         this.player
@@ -466,14 +546,49 @@ export class Game {
             return;
         }
 
-        this.score += 100;
-
-        this.onGoalsChanged?.(
+        const goalIndex =
             this.level
-                .getGoalCollectionState()
-        );
+                .getGoalIndex(
+                    goal
+                );
+
+        const goalColor =
+            this.level
+                .getGoalColors()[
+                    goalIndex
+                ];
+
+        const completionTime =
+            this.getFrogTimeElapsed();
+
+        const remainingTime =
+            this.getFrogTimeRemaining();
+
+        const timeBonus =
+            Math.floor(
+                remainingTime *
+                10
+            );
+
+        this.score +=
+            100 +
+            timeBonus;
 
         this.updateHUD();
+
+        this.onGoalCelebration?.({
+            goalIndex,
+
+            goalColor,
+
+            time:
+                completionTime,
+
+            timeBonus,
+
+            score:
+                this.score,
+        });
 
         if (
             this.level
@@ -484,21 +599,31 @@ export class Game {
         }
 
         this.state =
-            'levelComplete';
+            'goalCelebration';
 
         this.clearRidingPlatform();
+    }
 
-        setTimeout(() => {
-            this.player.reset();
+    public continueAfterGoal():
+        void {
+        if (
+            this.state !==
+            'goalCelebration'
+        ) {
+            return;
+        }
 
-            this.furthestZ =
-                this.level
-                    .definition
-                    .startZ;
+        this.player.reset();
 
-            this.state =
-                'playing';
-        }, 650);
+        this.resetFrogTimer();
+
+        this.furthestZ =
+            this.level
+                .definition
+                .startZ;
+
+        this.state =
+            'playing';
     }
 
     // --------------------------------------------------
@@ -592,6 +717,7 @@ export class Game {
                 this.level.definition.startZ;
 
             this.player.reset();
+            this.resetFrogTimer();
 
             this.player.entity.enabled =
                 true;
@@ -619,6 +745,7 @@ export class Game {
             this.clearRidingPlatform();
 
             this.player.reset();
+            this.resetFrogTimer();
 
             this.player.entity.enabled =
                 true;
