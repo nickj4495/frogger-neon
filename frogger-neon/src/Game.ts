@@ -35,6 +35,12 @@ export interface GoalResult {
     score: number;
 }
 
+export interface LevelCompleteResult {
+    time: number;
+    lives: number;
+    score: number;
+}
+
 export class Game {
     private lives = 3;
     private score = 0;
@@ -48,6 +54,9 @@ export class Game {
 
     private frogTimeRemaining =
         this.frogTimeLimit;
+
+    private levelElapsedTime =
+        0;
 
     private updateTimer(
         dt: number
@@ -90,6 +99,21 @@ export class Game {
             this.frogTimeLimit -
             this.getFrogTimeRemaining()
         );
+    }
+
+    public getLevelElapsedTime():
+        number {
+        return this.levelElapsedTime;
+    }
+
+    public getLives():
+        number {
+        return this.lives;
+    }
+
+    public getScore():
+        number {
+        return this.score;
     }
 
     private resetFrogTimer():
@@ -137,6 +161,12 @@ export class Game {
             (
                 result:
                     GoalResult
+            ) => void,
+
+        private onLevelComplete?:
+            (
+                result:
+                    LevelCompleteResult
             ) => void
     ) {
         this.hud =
@@ -153,6 +183,13 @@ export class Game {
     ): void {
         if (this.state !== 'playing') {
             return;
+        }
+
+        if (
+            !Debug.isTestMode()
+        ) {
+            this.levelElapsedTime +=
+                dt;
         }
 
         this.updateTimer(
@@ -530,9 +567,16 @@ export class Game {
 
         this.updateHUD();
 
-        console.log(
-            'LEVEL COMPLETE!'
-        );
+        this.onLevelComplete?.({
+            time:
+                this.levelElapsedTime,
+
+            lives:
+                this.lives,
+
+            score:
+                this.score,
+        });
     }
 
     private collectGoal(
@@ -545,6 +589,17 @@ export class Game {
         ) {
             return;
         }
+
+        /*
+         * Immediately freeze gameplay.
+         *
+         * Every goal — including the fifth —
+         * enters the same celebration state.
+         */
+        this.state =
+            'goalCelebration';
+
+        this.clearRidingPlatform();
 
         const goalIndex =
             this.level
@@ -589,19 +644,6 @@ export class Game {
             score:
                 this.score,
         });
-
-        if (
-            this.level
-                .areAllGoalsCollected()
-        ) {
-            this.completeLevel();
-            return;
-        }
-
-        this.state =
-            'goalCelebration';
-
-        this.clearRidingPlatform();
     }
 
     public continueAfterGoal():
@@ -613,6 +655,23 @@ export class Game {
             return;
         }
 
+        /*
+         * Frog #5 has completed the
+         * level. Do NOT respawn.
+         */
+        if (
+            this.level
+                .areAllGoalsCollected()
+        ) {
+            this.completeLevel();
+
+            return;
+        }
+
+        /*
+         * Normal goals 1–4:
+         * start another crossing.
+         */
         this.player.reset();
 
         this.resetFrogTimer();
@@ -864,5 +923,13 @@ export class Game {
         this.message.classList.remove(
             'visible'
         );
+    }
+
+    public destroy(): void {
+        this.clearRidingPlatform();
+
+        this.hud.remove();
+
+        this.message.remove();
     }
 }

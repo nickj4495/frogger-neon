@@ -6,10 +6,12 @@ import type {
 
 export const Level01: LevelDefinition = {
     id: 'level-01',
+    number: 1,
 
-    name: 'Neon Crossing',
+    name: 'Edo Japan',
 
-    startX: 0,
+    theme: 'edo-japan',
+
     startZ: 7,
 
     goalZ: -6,

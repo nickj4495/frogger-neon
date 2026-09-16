@@ -71,7 +71,11 @@ export interface GoalDefinition {
 export interface LevelDefinition {
     id: string;
 
+    number: number;
+
     name: string;
+
+    theme: string;
 
     startX: number;
     startZ: number;

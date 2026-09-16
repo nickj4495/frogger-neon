@@ -1,17 +1,21 @@
-export interface GoalCelebrationData {
+export interface LevelCompleteData {
+    levelName: string;
     time: number;
-    timeBonus: number;
+    lives: number;
     score: number;
 }
 
-export class GoalCelebration {
+export class LevelCompleteScreen {
     private element:
+        HTMLDivElement;
+
+    private levelElement:
         HTMLDivElement;
 
     private timeElement:
         HTMLDivElement;
 
-    private bonusElement:
+    private livesElement:
         HTMLDivElement;
 
     private scoreElement:
@@ -24,32 +28,6 @@ export class GoalCelebration {
         (() => void) | null =
             null;
 
-    private onKeyDown =
-        (
-            event:
-                KeyboardEvent
-        ): void => {
-            if (
-                event.code !==
-                    'Enter' &&
-                event.code !==
-                    'Space'
-            ) {
-                return;
-            }
-
-            if (
-                !this.onContinue ||
-                this.continueButton.disabled
-            ) {
-                return;
-            }
-
-            event.preventDefault();
-
-            this.onContinue();
-        };
-
     constructor() {
         this.element =
             document.createElement(
@@ -57,7 +35,7 @@ export class GoalCelebration {
             );
 
         this.element.id =
-            'goal-celebration';
+            'level-complete-screen';
 
         const panel =
             document.createElement(
@@ -65,7 +43,7 @@ export class GoalCelebration {
             );
 
         panel.className =
-            'goal-celebration-panel';
+            'level-complete-panel';
 
         const eyebrow =
             document.createElement(
@@ -73,10 +51,10 @@ export class GoalCelebration {
             );
 
         eyebrow.className =
-            'goal-celebration-eyebrow';
+            'level-complete-eyebrow';
 
         eyebrow.textContent =
-            'NEON CROSSING';
+            'ALL FROGS SECURED';
 
         const title =
             document.createElement(
@@ -84,10 +62,18 @@ export class GoalCelebration {
             );
 
         title.className =
-            'goal-celebration-title';
+            'level-complete-title';
 
         title.textContent =
-            'GOAL SECURED';
+            'LEVEL COMPLETE';
+
+        this.levelElement =
+            document.createElement(
+                'div'
+            );
+
+        this.levelElement.className =
+            'level-complete-level';
 
         const divider =
             document.createElement(
@@ -95,26 +81,7 @@ export class GoalCelebration {
             );
 
         divider.className =
-            'goal-celebration-divider';
-
-        const timeLabel =
-            document.createElement(
-                'div'
-            );
-
-        timeLabel.className =
-            'goal-celebration-label';
-
-        timeLabel.textContent =
-            'CROSSING TIME';
-
-        this.timeElement =
-            document.createElement(
-                'div'
-            );
-
-        this.timeElement.className =
-            'goal-celebration-time';
+            'level-complete-divider';
 
         const stats =
             document.createElement(
@@ -122,9 +89,14 @@ export class GoalCelebration {
             );
 
         stats.className =
-            'goal-celebration-stats';
+            'level-complete-stats';
 
-        this.bonusElement =
+        this.timeElement =
+            document.createElement(
+                'div'
+            );
+
+        this.livesElement =
             document.createElement(
                 'div'
             );
@@ -140,30 +112,24 @@ export class GoalCelebration {
             );
 
         this.continueButton.className =
-            'goal-celebration-continue';
+            'level-complete-continue';
 
         this.continueButton.textContent =
             'CONTINUE';
 
-                this.continueButton.addEventListener(
+        this.continueButton.addEventListener(
             'click',
             () => {
-                const callback =
-                    this.onContinue;
-
-                if (
-                    !callback ||
-                    this.continueButton.disabled
-                ) {
-                    return;
-                }
-
-                callback();
+                this.onContinue?.();
             }
         );
 
         stats.appendChild(
-            this.bonusElement
+            this.timeElement
+        );
+
+        stats.appendChild(
+            this.livesElement
         );
 
         stats.appendChild(
@@ -179,15 +145,11 @@ export class GoalCelebration {
         );
 
         panel.appendChild(
+            this.levelElement
+        );
+
+        panel.appendChild(
             divider
-        );
-
-        panel.appendChild(
-            timeLabel
-        );
-
-        panel.appendChild(
-            this.timeElement
         );
 
         panel.appendChild(
@@ -208,29 +170,22 @@ export class GoalCelebration {
     }
 
     public show(
-        data: GoalCelebrationData,
+        data: LevelCompleteData,
         onContinue: () => void
     ): void {
         this.onContinue =
             onContinue;
 
-        this.continueButton.disabled =
-            true;
-
-        this.continueButton.classList.remove(
-            'ready'
-        );
-
-        window.addEventListener(
-            'keydown',
-            this.onKeyDown
-        );
+        this.levelElement.textContent =
+            data.levelName;
 
         this.timeElement.textContent =
-            `${data.time.toFixed(2)}s`;
+            `TOTAL TIME ${this.formatTime(
+                data.time
+            )}`;
 
-        this.bonusElement.textContent =
-            `TIME BONUS +${data.timeBonus}`;
+        this.livesElement.textContent =
+            `LIVES LEFT ${data.lives}`;
 
         this.scoreElement.textContent =
             `SCORE ${data.score
@@ -245,39 +200,40 @@ export class GoalCelebration {
         );
     }
 
-    public enableContinue():
-        void {
-        this.continueButton.disabled =
-            false;
-
-        this.continueButton.classList.add(
-            'ready'
-        );
-    }
-
     public hide(): void {
         this.element.classList.remove(
             'visible'
         );
 
-        window.removeEventListener(
-            'keydown',
-            this.onKeyDown
-        );
-
         this.onContinue =
             null;
     }
 
-    public destroy(): void {
-        window.removeEventListener(
-            'keydown',
-            this.onKeyDown
+    private formatTime(
+        seconds: number
+    ): string {
+        const minutes =
+            Math.floor(
+                seconds / 60
+            );
+
+        const remainingSeconds =
+            seconds -
+            minutes * 60;
+
+        return (
+            `${minutes
+                .toString()
+                .padStart(
+                    2,
+                    '0'
+                )}:` +
+            remainingSeconds
+                .toFixed(2)
+                .padStart(
+                    5,
+                    '0'
+                )
         );
-
-        this.onContinue =
-            null;
-
-        this.element.remove();
     }
 }

@@ -730,6 +730,22 @@ canvas {
     font-weight: 700;
 }
 
+.goal-celebration-continue {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.goal-celebration-continue.ready {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
 /* ==========================================
    COLLECTED FROG FLIGHT
    ========================================== */
@@ -875,4 +891,310 @@ canvas {
 .goal-celebration-continue:active {
     transform:
         translateY(1px);
+}
+
+#level-complete-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(0, 0, 0, 0);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.7s ease,
+        background 0.8s ease,
+        visibility 0.7s;
+}
+
+#level-complete-screen.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    background:
+        rgba(0, 0, 0, 0.72);
+}
+
+.level-complete-panel {
+    width: min(
+        420px,
+        calc(100vw - 48px)
+    );
+
+    padding: 34px;
+
+    box-sizing: border-box;
+
+    background:
+        rgba(8, 12, 18, 0.96);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.2);
+
+    border-radius: 12px;
+
+    text-align: center;
+
+    opacity: 0;
+
+    transform:
+        translateY(18px)
+        scale(0.96);
+
+    transition:
+        opacity 0.7s ease,
+        transform 0.8s
+            cubic-bezier(
+                0.16,
+                1,
+                0.3,
+                1
+            );
+}
+
+#level-complete-screen.visible
+.level-complete-panel {
+    opacity: 1;
+
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+.level-complete-eyebrow {
+    margin-bottom: 8px;
+
+    font-size: 11px;
+    letter-spacing: 0.22em;
+
+    opacity: 0.55;
+}
+
+.level-complete-title {
+    font-size: 32px;
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+}
+
+.level-complete-level {
+    margin-top: 8px;
+
+    font-size: 14px;
+    letter-spacing: 0.18em;
+
+    opacity: 0.75;
+}
+
+.level-complete-divider {
+    height: 1px;
+
+    margin:
+        24px 0;
+
+    background:
+        rgba(255, 255, 255, 0.14);
+}
+
+.level-complete-stats {
+    display: grid;
+    gap: 12px;
+
+    margin-bottom: 28px;
+
+    font-size: 14px;
+    letter-spacing: 0.08em;
+}
+
+.level-complete-continue {
+    width: 100%;
+
+    padding:
+        13px 18px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.35);
+
+    border-radius: 7px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    color: white;
+
+    font: inherit;
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.level-complete-continue:hover {
+    background:
+        rgba(255, 255, 255, 0.16);
+
+    transform:
+        translateY(-1px);
+}
+
+.level-complete-continue:active {
+    transform:
+        translateY(1px);
+}
+
+#level-select {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(0, 0, 0, 0.82);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.35s ease,
+        visibility 0.35s;
+}
+
+#level-select.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.level-select-panel {
+    width: min(
+        760px,
+        calc(100vw - 48px)
+    );
+}
+
+.level-select-eyebrow {
+    margin-bottom: 8px;
+
+    text-align: center;
+
+    font-size: 11px;
+    letter-spacing: 0.22em;
+
+    opacity: 0.55;
+}
+
+.level-select-title {
+    margin-bottom: 30px;
+
+    text-align: center;
+
+    font-size: 34px;
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+}
+
+.level-select-levels {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 16px;
+}
+
+.level-select-card {
+    min-height: 180px;
+
+    padding: 24px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255, 255, 255, 0.07);
+
+    color: white;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.level-select-card:not(
+    :disabled
+):hover {
+    transform:
+        translateY(-3px);
+
+    background:
+        rgba(255, 255, 255, 0.12);
+}
+
+.level-select-card:disabled {
+    cursor: default;
+
+    opacity: 0.42;
+}
+
+.level-select-number {
+    margin-bottom: 10px;
+
+    font-size: 11px;
+    letter-spacing: 0.18em;
+
+    opacity: 0.65;
+}
+
+.level-select-name {
+    font-size: 25px;
+    font-weight: 700;
+}
+
+.level-select-status {
+    margin-top: 36px;
+
+    font-size: 11px;
+    letter-spacing: 0.16em;
+
+    opacity: 0.65;
+}
+
+@media (
+    max-width: 650px
+) {
+    .level-select-levels {
+        grid-template-columns:
+            1fr;
+    }
 }

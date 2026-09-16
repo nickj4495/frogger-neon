@@ -20,6 +20,29 @@ import {
 import {
     CollectedFrogAnimation,
 } from './ui/CollectedFrogAnimation';
+import {
+    LevelCompleteScreen,
+} from './ui/LevelCompleteScreen';
+
+import {
+    Progression,
+} from './core/Progression';
+
+import {
+    LevelCatalog,
+} from './levels/LevelCatalog';
+
+import type {
+    LevelCatalogEntry,
+} from './levels/LevelCatalog';
+
+import {
+    LevelSelect,
+} from './ui/LevelSelect';
+
+import type {
+    Level,
+} from './levels/Level';
 
 import { LevelManager } from './levels/LevelManager';
 import { Level01 } from './levels/Level01';
@@ -58,6 +81,7 @@ window.addEventListener('resize', () => {
 app.scene.exposure = 1.2;
 
 Settings.load();
+Progression.load();
 
 // --------------------------------------------------
 // HELPERS
@@ -100,6 +124,24 @@ function createBox(
 // --------------------------------------------------
 
 const neonGreen = new pc.Color(0.1, 1, 0.45);
+
+interface GameSession {
+    level: Level;
+
+    frog: Player;
+
+    game: Game;
+
+    followCamera:
+        FollowCamera;
+
+    playerEntity:
+        pc.Entity;
+}
+
+let session:
+    GameSession | null =
+        null;
 
 // --------------------------------------------------
 // LEVEL
@@ -150,6 +192,9 @@ const movingPlatformLanes = [
 
 const goalCelebration =
     new GoalCelebration();
+
+const levelCompleteScreen =
+    new LevelCompleteScreen();
 
 const game =
     new Game(
@@ -230,6 +275,9 @@ const game =
                             );
 
                     if (!slot) {
+                        goalCelebration
+                            .enableContinue();
+
                         return;
                     }
 
@@ -264,10 +312,44 @@ const game =
                                     .celebrateSlot(
                                         result.goalIndex
                                     );
+
+                                goalCelebration
+                                    .enableContinue();
                             },
                     });
                 },
                 3000
+            );
+        },
+
+        result => {
+            levelCompleteScreen.show(
+                {
+                    levelName:
+                        'EDO JAPAN',
+
+                    time:
+                        result.time,
+
+                    lives:
+                        result.lives,
+
+                    score:
+                        result.score,
+                },
+
+                () => {
+                    levelCompleteScreen
+                        .hide();
+
+                    /*
+                     * Level Select will go
+                     * here next.
+                     */
+                    console.log(
+                        'RETURN TO LEVEL SELECT'
+                    );
+                }
             );
         }
     );

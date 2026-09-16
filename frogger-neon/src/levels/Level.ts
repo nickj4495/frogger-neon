@@ -282,6 +282,18 @@ export class Level {
         }
 
         for (
+            const lane
+            of this.turtleLanes
+        ) {
+            for (
+                const platform
+                of lane.platforms
+            ) {
+                platform.destroy();
+            }
+        }
+
+        for (
             const entity
             of this.entities
         ) {
@@ -289,7 +301,13 @@ export class Level {
         }
 
         this.trafficLanes = [];
+
         this.riverLanes = [];
+
+        this.turtleLanes = [];
+
+        this.goals = [];
+
         this.entities = [];
     }
 

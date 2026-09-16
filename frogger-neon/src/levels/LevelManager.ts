@@ -30,6 +30,17 @@ export class LevelManager {
         return this.currentLevel;
     }
 
+    public unload(): void {
+        if (!this.currentLevel) {
+            return;
+        }
+
+        this.currentLevel.destroy();
+
+        this.currentLevel =
+            null;
+    }
+
     public getCurrentLevel():
         Level | null {
         return this.currentLevel;
