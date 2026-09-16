@@ -48,6 +48,8 @@ interface TurtleGroup {
     material:
         pc.StandardMaterial;
 
+    size: number;
+
     timer: number;
 
     state: TurtleState;
@@ -132,6 +134,16 @@ export class TurtleLane
             i < options.groupCount;
             i++
         ) {
+            /*
+             * Most groups use the configured
+             * size. 20% become a short
+             * 2-turtle group.
+             */
+            const size =
+                Math.random() < 0.2
+                    ? 2
+                    : this.groupSize;
+
             const entity =
                 new pc.Entity(
                     `Turtles-${options.z}-${i}`
@@ -145,7 +157,7 @@ export class TurtleLane
             );
 
             entity.setLocalScale(
-                this.groupSize *
+                size *
                     CELL_SIZE,
                 0.28,
                 0.75
@@ -187,13 +199,35 @@ export class TurtleLane
                 entity
             );
 
+            const cycleLength =
+                this.surfaceDuration +
+                this.warningDuration +
+                this.divingDuration +
+                this.submergedDuration +
+                this.risingDuration;
+
+            /*
+             * Each group begins at a random
+             * point in its dive cycle.
+             *
+             * This prevents every level load
+             * from producing the same pattern.
+             */
+            const randomTimer =
+                this.canSubmerge
+                    ? Math.random() *
+                        cycleLength
+                    : 0;
+
             this.groups.push({
                 entity,
 
                 material,
 
+                size,
+
                 timer:
-                    i * 0.45,
+                    randomTimer,
 
                 state: 'surfaced',
             });
@@ -555,6 +589,22 @@ export class TurtleLane
         );
     }
 
+    private getGroupSize(
+        platform: pc.Entity
+    ): number | null {
+        const group =
+            this.groups.find(
+                item =>
+                    item.entity ===
+                    platform
+            );
+
+        return (
+            group?.size ??
+            null
+        );
+    }
+
     public getSlotX(
         platform: pc.Entity,
         slotIndex: number
@@ -564,8 +614,17 @@ export class TurtleLane
                 .getPosition()
                 .x;
 
+        const size =
+            this.getGroupSize(
+                platform
+            );
+
+        if (size === null) {
+            return platformX;
+        }
+
         const width =
-            this.groupSize *
+            size *
             CELL_SIZE;
 
         const leftEdge =
@@ -589,8 +648,17 @@ export class TurtleLane
                 .getPosition()
                 .x;
 
+        const size =
+            this.getGroupSize(
+                platform
+            );
+
+        if (size === null) {
+            return null;
+        }
+
         const width =
-            this.groupSize *
+            size *
             CELL_SIZE;
 
         const leftEdge =
@@ -615,9 +683,8 @@ export class TurtleLane
             );
 
         if (
-            !this.isValidSlot(
-                slotIndex
-            )
+            slotIndex < 0 ||
+            slotIndex >= size
         ) {
             return null;
         }

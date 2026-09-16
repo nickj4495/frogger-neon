@@ -71,4 +71,8 @@ export class TimerHUD {
             safeSeconds <= 5
         );
     }
+
+    public destroy(): void {
+        this.element.remove();
+    }
 }

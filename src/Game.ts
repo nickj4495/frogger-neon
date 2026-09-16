@@ -685,6 +685,18 @@ export class Game {
             'playing';
     }
 
+    public debugCompleteLevel():
+        void {
+        if (
+            !Debug.isTestMode() ||
+            this.state !== 'playing'
+        ) {
+            return;
+        }
+
+        this.completeLevel();
+    }
+
     // --------------------------------------------------
     // TRAFFIC
     // --------------------------------------------------

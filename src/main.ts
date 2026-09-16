@@ -1,32 +1,49 @@
 import * as pc from 'playcanvas';
 import './style.css';
 
-import { FollowCamera } from './core/FollowCamera';
-import { Settings } from './core/Settings';
+import {
+    FollowCamera,
+} from './core/FollowCamera';
+
+import {
+    Settings,
+} from './core/Settings';
+
 import {
     Debug,
 } from './core/Debug';
 
-import { SettingsMenu } from './ui/SettingsMenu';
+import {
+    Progression,
+} from './core/Progression';
+
+import {
+    SettingsMenu,
+} from './ui/SettingsMenu';
+
 import {
     FrogCollectionHUD,
 } from './ui/FrogCollectionHUD';
+
 import {
     TimerHUD,
 } from './ui/TimerHUD';
+
 import {
     GoalCelebration,
 } from './ui/GoalCelebration';
+
 import {
     CollectedFrogAnimation,
 } from './ui/CollectedFrogAnimation';
+
 import {
     LevelCompleteScreen,
 } from './ui/LevelCompleteScreen';
 
 import {
-    Progression,
-} from './core/Progression';
+    LevelSelect,
+} from './ui/LevelSelect';
 
 import {
     LevelCatalog,
@@ -36,48 +53,74 @@ import type {
     LevelCatalogEntry,
 } from './levels/LevelCatalog';
 
-import {
-    LevelSelect,
-} from './ui/LevelSelect';
-
 import type {
     Level,
 } from './levels/Level';
 
-import { LevelManager } from './levels/LevelManager';
-import { Level01 } from './levels/Level01';
+import {
+    LevelManager,
+} from './levels/LevelManager';
 
-import { Player } from './Player';
-import { Game } from './Game';
+import {
+    Player,
+} from './Player';
+
+import {
+    Game,
+} from './Game';
 
 // --------------------------------------------------
 // APP
 // --------------------------------------------------
 
-const canvas = document.createElement('canvas');
-document.body.appendChild(canvas);
+const canvas =
+    document.createElement(
+        'canvas'
+    );
 
-const app = new pc.Application(canvas, {
-    keyboard: new pc.Keyboard(window),
-    mouse: new pc.Mouse(canvas),
-});
+document.body.appendChild(
+    canvas
+);
 
-app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-app.setCanvasResolution(pc.RESOLUTION_AUTO);
+const app =
+    new pc.Application(
+        canvas,
+        {
+            keyboard:
+                new pc.Keyboard(
+                    window
+                ),
+
+            mouse:
+                new pc.Mouse(
+                    canvas
+                ),
+        }
+    );
+
+app.setCanvasFillMode(
+    pc.FILLMODE_FILL_WINDOW
+);
+
+app.setCanvasResolution(
+    pc.RESOLUTION_AUTO
+);
 
 app.resizeCanvas(
     window.innerWidth,
     window.innerHeight
 );
 
-window.addEventListener('resize', () => {
-    app.resizeCanvas(
-        window.innerWidth,
-        window.innerHeight
-    );
-});
+window.addEventListener(
+    'resize',
+    () => {
+        app.resizeCanvas(
+            window.innerWidth,
+            window.innerHeight
+        );
+    }
+);
 
-// Dark nighttime background
 app.scene.exposure = 1.2;
 
 Settings.load();
@@ -87,9 +130,15 @@ Progression.load();
 // HELPERS
 // --------------------------------------------------
 
-function createMaterial(color: pc.Color): pc.StandardMaterial {
-    const material = new pc.StandardMaterial();
-    material.diffuse = color;
+function createMaterial(
+    color: pc.Color
+): pc.StandardMaterial {
+    const material =
+        new pc.StandardMaterial();
+
+    material.diffuse =
+        color;
+
     material.update();
 
     return material;
@@ -101,20 +150,36 @@ function createBox(
     scale: pc.Vec3,
     color: pc.Color
 ): pc.Entity {
-    const entity = new pc.Entity(name);
+    const entity =
+        new pc.Entity(
+            name
+        );
 
-    entity.addComponent('render', {
-        type: 'box',
-    });
+    entity.addComponent(
+        'render',
+        {
+            type: 'box',
+        }
+    );
 
-    entity.setPosition(position);
-    entity.setLocalScale(scale);
+    entity.setPosition(
+        position
+    );
+
+    entity.setLocalScale(
+        scale
+    );
 
     if (entity.render) {
-        entity.render.material = createMaterial(color);
+        entity.render.material =
+            createMaterial(
+                color
+            );
     }
 
-    app.root.addChild(entity);
+    app.root.addChild(
+        entity
+    );
 
     return entity;
 }
@@ -123,7 +188,114 @@ function createBox(
 // COLORS
 // --------------------------------------------------
 
-const neonGreen = new pc.Color(0.1, 1, 0.45);
+const neonGreen =
+    new pc.Color(
+        0.1,
+        1,
+        0.45
+    );
+
+// --------------------------------------------------
+// LEVEL MANAGER
+// --------------------------------------------------
+
+const levelManager =
+    new LevelManager(
+        app
+    );
+
+// --------------------------------------------------
+// GLOBAL UI
+// --------------------------------------------------
+
+const goalCelebration =
+    new GoalCelebration();
+
+const levelCompleteScreen =
+    new LevelCompleteScreen();
+
+const collectedFrogAnimation =
+    new CollectedFrogAnimation();
+
+// --------------------------------------------------
+// LIGHT
+// --------------------------------------------------
+
+const light =
+    new pc.Entity(
+        'Main Light'
+    );
+
+light.addComponent(
+    'light',
+    {
+        type: 'directional',
+
+        color:
+            new pc.Color(
+                0.65,
+                0.72,
+                1
+            ),
+
+        intensity: 2,
+
+        castShadows: true,
+    }
+);
+
+light.setEulerAngles(
+    45,
+    30,
+    0
+);
+
+app.root.addChild(
+    light
+);
+
+// --------------------------------------------------
+// CAMERA
+// --------------------------------------------------
+
+const camera =
+    new pc.Entity(
+        'Camera'
+    );
+
+camera.addComponent(
+    'camera',
+    {
+        clearColor:
+            new pc.Color(
+                0.005,
+                0.008,
+                0.02
+            ),
+
+        fov: 38,
+    }
+);
+
+camera.setPosition(
+    0,
+    18,
+    14
+);
+
+camera.lookAt(
+    0,
+    0,
+    -3
+);
+
+app.root.addChild(
+    camera
+);
+
+// --------------------------------------------------
+// GAME SESSION
+// --------------------------------------------------
 
 interface GameSession {
     level: Level;
@@ -137,6 +309,12 @@ interface GameSession {
 
     playerEntity:
         pc.Entity;
+
+    frogCollectionHUD:
+        FrogCollectionHUD;
+
+    timerHUD:
+        TimerHUD;
 }
 
 let session:
@@ -144,283 +322,375 @@ let session:
         null;
 
 // --------------------------------------------------
-// LEVEL
+// SESSION CLEANUP
 // --------------------------------------------------
 
-const levelManager =
-    new LevelManager(app);
+function destroySession(): void {
+    if (!session) {
+        return;
+    }
 
-const level =
-    levelManager.load(Level01);
+    goalCelebration.hide();
 
-const frogCollectionHUD =
-    new FrogCollectionHUD(
-        level.getGoalColors()
+    levelCompleteScreen.hide();
+
+    session.game.destroy();
+
+    session.timerHUD.destroy();
+
+    session.frogCollectionHUD.destroy();
+
+    session.playerEntity.destroy();
+
+    levelManager.unload();
+
+    session = null;
+
+    camera.setPosition(
+        0,
+        18,
+        14
     );
 
-const collectedFrogAnimation =
-    new CollectedFrogAnimation();
+    camera.lookAt(
+        0,
+        0,
+        -3
+    );
+}
 
 // --------------------------------------------------
-// PLAYER
+// LEVEL SELECT
 // --------------------------------------------------
 
-const startPosition =
-    level.getStartPosition();
+const levelSelect =
+    new LevelSelect(
+        LevelCatalog,
 
-const player = createBox(
-    'Player',
-    startPosition,
-    new pc.Vec3(
-        0.8,
-        0.8,
-        0.8
-    ),
-    neonGreen
-);
+        entry => {
+            if (!entry.definition) {
+                return;
+            }
 
-const frog = new Player(
-    app,
-    player,
-    startPosition
-);
-
-const movingPlatformLanes = [
-    ...level.riverLanes,
-    ...level.turtleLanes,
-];
-
-const goalCelebration =
-    new GoalCelebration();
-
-const levelCompleteScreen =
-    new LevelCompleteScreen();
-
-const game =
-    new Game(
-        frog,
-        level,
-        level.trafficLanes,
-        movingPlatformLanes,
-
-        collected => {
-            frogCollectionHUD.update(
-                collected
-            );
-        },
-
-        result => {
-            /*
-             * 0.0s
-             *
-             * Begin cinematic push-in.
-             */
-            followCamera
-                .startGoalCelebration();
-
-            /*
-             * 1.5s
-             *
-             * Reveal results once the
-             * camera has established
-             * Frogger.
-             */
-            window.setTimeout(
-                () => {
-                    goalCelebration.show(
-                        result,
-
-                        () => {
-                            /*
-                             * Player explicitly
-                             * chooses to continue.
-                             */
-                            goalCelebration.hide();
-
-                            followCamera
-                                .endGoalCelebration();
-
-                            /*
-                             * Give the UI and
-                             * camera a short
-                             * moment to begin
-                             * easing away before
-                             * respawning.
-                             */
-                            window.setTimeout(
-                                () => {
-                                    game
-                                        .continueAfterGoal();
-                                },
-                                550
-                            );
-                        }
-                    );
-                },
-                1500
-            );
-
-            /*
-             * 3.0s
-             *
-             * Send collected frog toward
-             * its HUD slot.
-             */
-            window.setTimeout(
-                () => {
-                    const slot =
-                        frogCollectionHUD
-                            .getSlotCenter(
-                                result.goalIndex
-                            );
-
-                    if (!slot) {
-                        goalCelebration
-                            .enableContinue();
-
-                        return;
-                    }
-
-                    const startX =
-                        window.innerWidth /
-                        2;
-
-                    const startY =
-                        window.innerHeight /
-                        2;
-
-                    collectedFrogAnimation.fly({
-                        color:
-                            result.goalColor,
-
-                        startX,
-
-                        startY,
-
-                        endX:
-                            slot.x,
-
-                        endY:
-                            slot.y,
-
-                        duration:
-                            1100,
-
-                        onComplete:
-                            () => {
-                                frogCollectionHUD
-                                    .celebrateSlot(
-                                        result.goalIndex
-                                    );
-
-                                goalCelebration
-                                    .enableContinue();
-                            },
-                    });
-                },
-                3000
-            );
-        },
-
-        result => {
-            levelCompleteScreen.show(
-                {
-                    levelName:
-                        'EDO JAPAN',
-
-                    time:
-                        result.time,
-
-                    lives:
-                        result.lives,
-
-                    score:
-                        result.score,
-                },
-
-                () => {
-                    levelCompleteScreen
-                        .hide();
-
-                    /*
-                     * Level Select will go
-                     * here next.
-                     */
-                    console.log(
-                        'RETURN TO LEVEL SELECT'
-                    );
-                }
+            startLevel(
+                entry
             );
         }
     );
 
-const timerHUD =
-    new TimerHUD();
-
 // --------------------------------------------------
-// LIGHT
+// START LEVEL
 // --------------------------------------------------
 
-const light = new pc.Entity('Main Light');
+function startLevel(
+    entry: LevelCatalogEntry
+): void {
+    if (!entry.definition) {
+        return;
+    }
 
-light.addComponent('light', {
-    type: 'directional',
-    color: new pc.Color(0.65, 0.72, 1),
-    intensity: 2,
-    castShadows: true,
-});
+    destroySession();
 
-light.setEulerAngles(45, 30, 0);
+    levelSelect.hide();
+    settingsMenu.showButton();
 
-app.root.addChild(light);
+    const level =
+        levelManager.load(
+            entry.definition
+        );
+
+    const startPosition =
+        level.getStartPosition();
+
+    const playerEntity =
+        createBox(
+            'Player',
+
+            startPosition,
+
+            new pc.Vec3(
+                0.8,
+                0.8,
+                0.8
+            ),
+
+            neonGreen
+        );
+
+    const frog =
+        new Player(
+            app,
+            playerEntity,
+            startPosition
+        );
+
+    const frogCollectionHUD =
+        new FrogCollectionHUD(
+            level.getGoalColors()
+        );
+
+    const timerHUD =
+        new TimerHUD();
+
+    const followCamera =
+        new FollowCamera(
+            camera,
+            frog.entity
+        );
+
+    const movingPlatformLanes = [
+        ...level.riverLanes,
+        ...level.turtleLanes,
+    ];
+
+    let game:
+        Game;
+
+    game =
+        new Game(
+            frog,
+
+            level,
+
+            level.trafficLanes,
+
+            movingPlatformLanes,
+
+            collected => {
+                frogCollectionHUD
+                    .update(
+                        collected
+                    );
+            },
+
+            result => {
+                followCamera
+                    .startGoalCelebration();
+
+                /*
+                 * Reveal the results after
+                 * the camera pushes in.
+                 */
+                window.setTimeout(
+                    () => {
+                        /*
+                         * Ignore an old callback
+                         * if this session has
+                         * already been destroyed.
+                         */
+                        if (
+                            session?.game !==
+                            game
+                        ) {
+                            return;
+                        }
+
+                        goalCelebration.show(
+                            result,
+
+                            () => {
+                                goalCelebration
+                                    .hide();
+
+                                followCamera
+                                    .endGoalCelebration();
+
+                                window.setTimeout(
+                                    () => {
+                                        if (
+                                            session?.game !==
+                                            game
+                                        ) {
+                                            return;
+                                        }
+
+                                        game
+                                            .continueAfterGoal();
+                                    },
+
+                                    550
+                                );
+                            }
+                        );
+                    },
+
+                    1500
+                );
+
+                /*
+                 * Send the collected frog
+                 * toward its HUD slot.
+                 */
+                window.setTimeout(
+                    () => {
+                        if (
+                            session?.game !==
+                            game
+                        ) {
+                            return;
+                        }
+
+                        const slot =
+                            frogCollectionHUD
+                                .getSlotCenter(
+                                    result.goalIndex
+                                );
+
+                        if (!slot) {
+                            goalCelebration
+                                .enableContinue();
+
+                            return;
+                        }
+
+                        const startX =
+                            window.innerWidth /
+                            2;
+
+                        const startY =
+                            window.innerHeight /
+                            2;
+
+                        collectedFrogAnimation
+                            .fly({
+                                color:
+                                    result.goalColor,
+
+                                startX,
+
+                                startY,
+
+                                endX:
+                                    slot.x,
+
+                                endY:
+                                    slot.y,
+
+                                duration:
+                                    1100,
+
+                                onComplete:
+                                    () => {
+                                        if (
+                                            session?.game !==
+                                            game
+                                        ) {
+                                            return;
+                                        }
+
+                                        frogCollectionHUD
+                                            .celebrateSlot(
+                                                result.goalIndex
+                                            );
+
+                                        goalCelebration
+                                            .enableContinue();
+                                    },
+                            });
+                    },
+
+                    3000
+                );
+            },
+
+            result => {
+                levelCompleteScreen
+                    .show(
+                        {
+                            levelName:
+                                entry.name
+                                    .toUpperCase(),
+
+                            time:
+                                result.time,
+
+                            lives:
+                                result.lives,
+
+                            score:
+                                result.score,
+                        },
+
+                        () => {
+                            levelCompleteScreen
+                                .hide();
+
+                            /*
+                             * Completing a level
+                             * unlocks the next
+                             * numbered level.
+                             */
+                            Progression.unlock(
+                                entry.number +
+                                    1
+                            );
+
+                            returnToLevelSelect();
+                        }
+                    );
+            }
+        );
+
+    session = {
+        level,
+
+        frog,
+
+        game,
+
+        followCamera,
+
+        playerEntity,
+
+        frogCollectionHUD,
+
+        timerHUD,
+    };
+}
 
 // --------------------------------------------------
-// CAMERA
+// SETTINGS
 // --------------------------------------------------
-
-const camera = new pc.Entity('Camera');
-
-camera.addComponent('camera', {
-    clearColor: new pc.Color(
-        0.005,
-        0.008,
-        0.02
-    ),
-    fov: 38,
-});
-
-camera.setPosition(0, 18, 14);
-camera.lookAt(0, 0, -3);
-
-app.root.addChild(camera);
-
-const followCamera =
-    new FollowCamera(
-        camera,
-        frog.entity
-    );
 
 const settingsMenu =
     new SettingsMenu(
         () => {
-            game.pause();
+            session?.game.pause();
         },
+
         () => {
-            game.resume();
+            session?.game.resume();
+        },
+
+        () => {
+            settingsMenu.hide();
+
+            returnToLevelSelect();
         }
     );
 
+function returnToLevelSelect(): void {
+    destroySession();
+
+    settingsMenu.hideButton();
+
+    levelSelect.show();
+}
+
 window.addEventListener(
     'keydown',
-    (event) => {
-        if (event.code === 'Escape') {
+    event => {
+        if (
+            event.code ===
+            'Escape'
+        ) {
             settingsMenu.toggle();
         }
     }
 );
 
 // --------------------------------------------------
-// PLAYER MOVEMENT
+// TEST MODE
 // --------------------------------------------------
 
 const testModeIndicator =
@@ -438,34 +708,73 @@ document.body.appendChild(
     testModeIndicator
 );
 
+// --------------------------------------------------
+// UPDATE
+// --------------------------------------------------
+
 app.on(
     'update',
     (dt: number) => {
         if (
-            app.keyboard?.wasPressed(
-                pc.KEY_T
-            )
+            app.keyboard
+                ?.wasPressed(
+                    pc.KEY_T
+                )
         ) {
             const testMode =
                 Debug.toggleTestMode();
 
-            testModeIndicator.style.display =
+            testModeIndicator
+                .style
+                .display =
                 testMode
                     ? 'block'
                     : 'none';
         }
 
-        if (game.isPlaying()) {
-            frog.update(dt);
-            levelManager.update(dt);
-            game.update(dt);
+        if (
+            Debug.isTestMode() &&
+            app.keyboard?.wasPressed(
+                pc.KEY_G
+            )
+        ) {
+            session?.game
+                .debugCompleteLevel();
         }
 
-        timerHUD.update(
-            game.getFrogTimeRemaining()
-        );
+        if (!session) {
+            return;
+        }
 
-        followCamera.update(dt);
+        if (
+            session.game
+                .isPlaying()
+        ) {
+            session.frog
+                .update(
+                    dt
+                );
+
+            levelManager.update(
+                dt
+            );
+
+            session.game
+                .update(
+                    dt
+                );
+        }
+
+        session.timerHUD
+            .update(
+                session.game
+                    .getFrogTimeRemaining()
+            );
+
+        session.followCamera
+            .update(
+                dt
+            );
     }
 );
 
@@ -474,3 +783,7 @@ app.on(
 // --------------------------------------------------
 
 app.start();
+
+settingsMenu.hideButton();
+
+levelSelect.show();

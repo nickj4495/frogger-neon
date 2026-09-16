@@ -6,7 +6,8 @@ export class SettingsMenu {
 
     constructor(
         private onOpen?: () => void,
-        private onClose?: () => void
+        private onClose?: () => void,
+        private onLevelSelect?: () => void
     ) {
         // ------------------------------------------
         // HAMBURGER BUTTON
@@ -156,6 +157,10 @@ export class SettingsMenu {
                         RESET DEFAULTS
                     </button>
 
+                    <button id="settings-level-select">
+                        LEVEL SELECT
+                    </button>
+
                     <button id="settings-close">
                         RESUME
                     </button>
@@ -268,6 +273,17 @@ export class SettingsMenu {
 
         this.container
             .querySelector(
+                '#settings-level-select'
+            )
+            ?.addEventListener(
+                'click',
+                () => {
+                    this.onLevelSelect?.();
+                }
+            );
+
+        this.container
+            .querySelector(
                 '#settings-reset'
             )
             ?.addEventListener(
@@ -317,6 +333,16 @@ export class SettingsMenu {
         } else {
             this.show();
         }
+    }
+
+    public showButton(): void {
+        this.menuButton.style.display =
+            '';
+    }
+
+    public hideButton(): void {
+        this.menuButton.style.display =
+            'none';
     }
 
     public isOpen(): boolean {

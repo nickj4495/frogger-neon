@@ -2,16 +2,13 @@ import * as pc from 'playcanvas';
 
 import {
     CELL_SIZE,
+    MOVING_OBJECT_MIN_X,
+    MOVING_OBJECT_MAX_X,
 } from './core/Grid';
 
 import type {
     MovingPlatformLane,
 } from './river/MovingPlatformLane';
-
-import {
-    MOVING_OBJECT_MIN_X,
-    MOVING_OBJECT_MAX_X,
-} from './core/Grid';
 
 export interface RiverLaneOptions {
     z: number;
@@ -21,13 +18,28 @@ export interface RiverLaneOptions {
     logCount: number;
     spacing: number;
 
-    // Number of Frogger-sized slots.
+    // Default number of Frogger-sized slots.
     logSize: number;
+}
+
+interface LogData {
+    entity: pc.Entity;
+
+    // Individual logical size of this log.
+    size: number;
 }
 
 export class RiverLane
     implements MovingPlatformLane {
-    public logs: pc.Entity[] = [];
+    private logsData:
+        LogData[] = [];
+
+    public get logs():
+        pc.Entity[] {
+        return this.logsData.map(
+            log => log.entity
+        );
+    }
 
     public get platforms():
         pc.Entity[] {
@@ -35,40 +47,64 @@ export class RiverLane
     }
 
     public readonly speed: number;
-    public readonly direction: 1 | -1;
+
+    public readonly direction:
+        1 | -1;
 
     public readonly z: number;
+
     public readonly logSize: number;
 
-    private readonly leftEdge = MOVING_OBJECT_MIN_X;
-    private readonly rightEdge = MOVING_OBJECT_MAX_X;
+    private readonly leftEdge =
+        MOVING_OBJECT_MIN_X;
+
+    private readonly rightEdge =
+        MOVING_OBJECT_MAX_X;
 
     constructor(
         private app: pc.Application,
         options: RiverLaneOptions
     ) {
-        this.speed = options.speed;
-        this.direction = options.direction;
+        this.speed =
+            options.speed;
 
-        this.z = options.z;
-        this.logSize = options.logSize;
+        this.direction =
+            options.direction;
+
+        this.z =
+            options.z;
+
+        this.logSize =
+            options.logSize;
 
         for (
             let i = 0;
             i < options.logCount;
             i++
         ) {
-            const log = new pc.Entity(
-                `Log-${options.z}-${i}`
+            /*
+             * 20% chance that this individual
+             * log is a short 2-slot variant.
+             */
+            const size =
+                Math.random() < 0.2
+                    ? 2
+                    : options.logSize;
+
+            const log =
+                new pc.Entity(
+                    `Log-${options.z}-${i}`
+                );
+
+            log.addComponent(
+                'render',
+                {
+                    type: 'box',
+                }
             );
 
-            log.addComponent('render', {
-                type: 'box',
-            });
-
-            // 1 world unit = 1 slot.
             log.setLocalScale(
-                options.logSize * CELL_SIZE,
+                size * CELL_SIZE,
                 0.35,
                 0.75
             );
@@ -92,21 +128,31 @@ export class RiverLane
 
             log.setPosition(
                 -7 +
-                    i * options.spacing,
+                    i *
+                        options.spacing,
                 0.25,
                 options.z
             );
 
-            this.app.root.addChild(log);
+            this.app.root.addChild(
+                log
+            );
 
-            this.logs.push(log);
+            this.logsData.push({
+                entity: log,
+                size,
+            });
         }
     }
 
     update(dt: number): void {
-        for (const log of this.logs) {
+        for (
+            const log
+            of this.logsData
+        ) {
             const position =
-                log.getPosition();
+                log.entity
+                    .getPosition();
 
             let x =
                 position.x +
@@ -118,17 +164,19 @@ export class RiverLane
                 this.direction === 1 &&
                 x > this.rightEdge
             ) {
-                x = this.leftEdge;
+                x =
+                    this.leftEdge;
             }
 
             if (
                 this.direction === -1 &&
                 x < this.leftEdge
             ) {
-                x = this.rightEdge;
+                x =
+                    this.rightEdge;
             }
 
-            log.setPosition(
+            log.entity.setPosition(
                 x,
                 position.y,
                 position.z
@@ -136,14 +184,22 @@ export class RiverLane
         }
     }
 
-    /**
-     * World X coordinate of the center
-     * of a particular log slot.
-     *
-     * 3-unit log:
-     *
-     * [ 0 ][ 1 ][ 2 ]
-     */
+    private getLogSize(
+        entity: pc.Entity
+    ): number | null {
+        const log =
+            this.logsData.find(
+                item =>
+                    item.entity ===
+                    entity
+            );
+
+        return (
+            log?.size ??
+            null
+        );
+    }
+
     public getSlotX(
         log: pc.Entity,
         slotIndex: number
@@ -151,9 +207,17 @@ export class RiverLane
         const logX =
             log.getPosition().x;
 
+        const size =
+            this.getLogSize(
+                log
+            );
+
+        if (size === null) {
+            return logX;
+        }
+
         const logWidth =
-            this.logSize *
-            CELL_SIZE;
+            size * CELL_SIZE;
 
         const leftEdge =
             logX -
@@ -161,15 +225,12 @@ export class RiverLane
 
         return (
             leftEdge +
-            slotIndex * CELL_SIZE +
+            slotIndex *
+                CELL_SIZE +
             CELL_SIZE / 2
         );
     }
 
-    /**
-     * Determines which slot contains
-     * a given world X position.
-     */
     public getClosestSlot(
         log: pc.Entity,
         frogX: number
@@ -177,16 +238,25 @@ export class RiverLane
         const logX =
             log.getPosition().x;
 
+        const size =
+            this.getLogSize(
+                log
+            );
+
+        if (size === null) {
+            return null;
+        }
+
         const logWidth =
-            this.logSize *
-            CELL_SIZE;
+            size * CELL_SIZE;
 
         const leftEdge =
             logX -
             logWidth / 2;
 
         const localX =
-            frogX - leftEdge;
+            frogX -
+            leftEdge;
 
         if (
             localX < 0 ||
@@ -203,8 +273,7 @@ export class RiverLane
 
         if (
             slotIndex < 0 ||
-            slotIndex >=
-                this.logSize
+            slotIndex >= size
         ) {
             return null;
         }
@@ -215,6 +284,13 @@ export class RiverLane
     public isValidSlot(
         slotIndex: number
     ): boolean {
+        /*
+         * This method cannot know which
+         * individual log is being checked.
+         *
+         * Individual size validation happens
+         * in getClosestSlot().
+         */
         return (
             slotIndex >= 0 &&
             slotIndex <

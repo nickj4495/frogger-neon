@@ -140,4 +140,10 @@ export class FrogCollectionHUD {
             650
         );
     }
+
+    public destroy(): void {
+        this.container.remove();
+
+        this.frogs = [];
+    }
 }
