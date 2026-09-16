@@ -7,6 +7,10 @@ import {
 } from '../TurtleLane';
 
 import {
+    EdgeFog,
+} from '../environment/EdgeFog';
+
+import {
     CELL_SIZE,
     GRID_WIDTH,
     LANDING_SNAP_DISTANCE,
@@ -42,6 +46,9 @@ export class Level {
     private entities:
         pc.Entity[] = [];
 
+    private edgeFog:
+        EdgeFog | null = null;
+
     constructor(
         private app: pc.Application,
         public readonly definition:
@@ -56,6 +63,10 @@ export class Level {
         this.buildRiver();
         this.buildTurtles();
         this.buildGoals();
+        this.edgeFog =
+            new EdgeFog(
+                this.app
+            );
     }
 
     private buildGround(): void {
@@ -268,6 +279,11 @@ export class Level {
                 vehicle.destroy();
             }
         }
+
+        this.edgeFog?.destroy();
+
+        this.edgeFog =
+            null;
 
         for (
             const lane

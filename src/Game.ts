@@ -5,7 +5,7 @@ import {
     CELL_SIZE,
     GRID_MIN_X,
     GRID_MAX_X,
-    isInsideGrid
+    isPlayerInsideBounds
 } from './core/Grid';
 import {
     Debug,
@@ -369,7 +369,7 @@ export class Game {
                 );
 
             if (
-                !isInsideGrid(
+                !isPlayerInsideBounds(
                     slotX
                 )
             ) {

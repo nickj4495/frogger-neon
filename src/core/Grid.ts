@@ -6,6 +6,24 @@ export const LANDING_SNAP_DISTANCE =
 export const GRID_MIN_X = -9;
 export const GRID_MAX_X = 9;
 
+/*
+ * Frogger may travel partially beyond
+ * the visible grid before being lost.
+ *
+ * 0.75 = roughly 75% of Frogger's
+ * logical one-cell footprint.
+ */
+export const PLAYER_EDGE_ALLOWANCE =
+    CELL_SIZE * 0.75;
+
+export const PLAYER_MIN_X =
+    GRID_MIN_X -
+    PLAYER_EDGE_ALLOWANCE;
+
+export const PLAYER_MAX_X =
+    GRID_MAX_X +
+    PLAYER_EDGE_ALLOWANCE;
+
 export const GRID_WIDTH =
     GRID_MAX_X - GRID_MIN_X + CELL_SIZE;
 
@@ -41,6 +59,15 @@ export function isInsideGrid(
     return (
         x >= GRID_MIN_X &&
         x <= GRID_MAX_X
+    );
+}
+
+export function isPlayerInsideBounds(
+    x: number
+): boolean {
+    return (
+        x >= PLAYER_MIN_X &&
+        x <= PLAYER_MAX_X
     );
 }
 
